@@ -30,7 +30,6 @@ Sheriff currently supports Linux x86 platforms.
   (a) Dynamic linking: this approach requires no environment variables,
       but the Sheriff library needs to be in a fixed, known location.
       Place the Sheriff library in a directory, e.g., `SHERIFF_DIR`.
-
       Then compile your program as follows:
 
       % g++ target.o -rdynamic SHERIFF_DIR/libsheriff_variant.so -ldl -o target
