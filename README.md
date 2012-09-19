@@ -51,7 +51,7 @@ Sheriff currently supports Linux x86 platforms.
 
 If you use sheriff, we would appreciate hearing about it. To cite
 Sheriff, please refer to the following paper, included as
-sheriff-oopsla2011.pdf.
+[`sheriff-oopsla2011.pdf`](https://github.com/plasma-umass/sheriff/blob/master/sheriff-oopsla2011.pdf?raw=true).
 
 ```latex
 @inproceedings{Liu:2011:SPD:2048066.2048070,
