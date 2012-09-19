@@ -2,10 +2,10 @@ Sheriff: : Precise Detection and Automatic Mitigation of False Sharing
 -------------------------------------------------
 
 Tongping Liu, Emery D. Berger
-<tonyliu@cs.umass.edu>
-<emery@cs.umass.edu>
+<tonyliu@cs.umass.edu> 
+<emery@cs.umass.edu> 
 
-<http://plasma.cs.umass.edu>
+<http://plasma.cs.umass.edu> 
 
 Copyright (C) 2011-2012 University of Massachusetts Amherst
 
@@ -49,24 +49,24 @@ Sheriff currently supports Linux x86 platforms.
 ### Citing Sheriff ###
 
 If you use sheriff, we would appreciate hearing about it. To cite
-Sheriff, please refer to the following paper (included as
-sheriff-oopsla2011.pdf):
+Sheriff, please refer to the following paper, included as
+sheriff-oopsla2011.pdf.
 
-@inproceedings{Liu:2011:SPD:2048066.2048070,
- author = {Liu, Tongping and Berger, Emery D.},
- title = {SHERIFF: precise detection and automatic mitigation of false sharing},
- booktitle = {Proceedings of the 2011 ACM international conference on Object oriented programming systems languages and applications},
- series = {OOPSLA '11},
- year = {2011},
- isbn = {978-1-4503-0940-0},
- location = {Portland, Oregon, USA},
- pages = {3--18},
- numpages = {16},
- url = {http://doi.acm.org/10.1145/2048066.2048070},
- doi = {http://doi.acm.org/10.1145/2048066.2048070},
- acmid = {2048070},
- publisher = {ACM},
- address = {New York, NY, USA},
- keywords = {false sharing, multi-threaded},
+@inproceedings{Liu:2011:SPD:2048066.2048070, 
+ author = {Liu, Tongping and Berger, Emery D.}, 
+ title = {SHERIFF: precise detection and automatic mitigation of false sharing}, 
+ booktitle = {Proceedings of the 2011 ACM International Conference on Object-Oriented Programming Systems, Languages, and Applications}, 
+ series = {OOPSLA '11}, 
+ year = {2011}, 
+ isbn = {978-1-4503-0940-0}, 
+ location = {Portland, Oregon, USA}, 
+ pages = {3--18}, 
+ numpages = {16}, 
+ url = {http://doi.acm.org/10.1145/2048066.2048070}, 
+ doi = {http://doi.acm.org/10.1145/2048066.2048070}, 
+ acmid = {2048070}, 
+ publisher = {ACM}, 
+ address = {New York, NY, USA}, 
+ keywords = {false sharing, multi-threaded}, 
 } 
 
