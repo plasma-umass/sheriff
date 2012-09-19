@@ -20,8 +20,9 @@
 
 */
 
-#ifndef _XDEFINES_H_
-#define _XDEFINES_H_
+#ifndef SHERIFF_XDEFINES_H
+#define SHERIFF_XDEFINES_H
+
 #include <sys/types.h>
 #include <syscall.h>
 #include <stdlib.h>
@@ -32,7 +33,7 @@
 
 /*
  * @file   xdefines.h   
- * @brief  Global definition used to control Sheriff-Detect and Sheriff-Protect
+ * @brief  Global definitions for Sheriff-Detect and Sheriff-Protect.
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */ 
@@ -77,21 +78,22 @@ extern "C"
 // Wordcount: only false sharing. That is the same as reverseindex.
 // Linear_regression:
 // String match: 
+
   typedef struct objectinfo {
     bool is_heap_object;
-    int  acess_threads;     // False sharing type, inter-objects or inner-object
-  	int  times; 
+    int  access_threads;     // False sharing type, inter-objects or inner-object
+    int  times; 
     unsigned long interwrites;
-  	unsigned long totalwrites;
+    unsigned long totalwrites;
     unsigned long unitlength;
     unsigned long totallength;
-  	unsigned long lines;
-  	unsigned long actuallines;
-  	unsigned long * start;
-  	unsigned long * stop;
-  	void * symbol;     // Used for globals only.
-  	struct wordchangeinfo* wordchange_start;
-  	struct wordchangeinfo* wordchange_stop;
+    unsigned long lines;
+    unsigned long actuallines;
+    unsigned long * start;
+    unsigned long * stop;
+    void * symbol;     // Used for globals only.
+    struct wordchangeinfo* wordchange_start;
+    struct wordchangeinfo* wordchange_stop;
     unsigned long callsite[CALL_SITE_DEPTH];
   } ObjectInfo;
 
@@ -100,10 +102,10 @@ extern "C"
 
 class xdefines {
 public:
-  enum { STACK_SIZE = 1024 * 1024 } ; // 1 * 1048576 };
+  enum { STACK_SIZE = 1024 * 1024 };
 #ifndef DETECT_FALSE_SHARING
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 200 }; // FIX ME 512 };
-  enum { SHAREDHEAP_SIZE = 1048576UL * 800 }; // FIX ME 512 };
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 200 };
+  enum { SHAREDHEAP_SIZE = 1048576UL * 800 };
   enum { PROTECTEDHEAP_CHUNK = 40960 };
   enum { SHAREDHEAP_CHUNK = 1048576};
   enum { LARGE_CHUNK = 1024 };
@@ -112,11 +114,11 @@ public:
   enum { EVAL_LEAST_INVALIDATES = 1000 };
 #else
 #ifdef X86_32BIT
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 600 }; // FIX ME 512 };
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 600 };
 #else
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 6000 }; // FIX ME 512 };
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 6000 };
 #endif
-// enum { PROTECTEDHEAP_SIZE = 1048576UL * 100 }; // FIXME: 100M for histogram only
+
   enum { PROTECTEDHEAP_CHUNK = 1048576 };
   enum { LARGE_CHUNK = 1024 };
   enum { EVAL_LARGE_HEAP_BASE = 1000 };
@@ -125,11 +127,11 @@ public:
 
   enum { EVAL_CHECKING_PERIOD = 20 };
   enum { MAX_GLOBALS_SIZE = 1048576UL * 20 };
-  enum { INTERNALHEAP_SIZE = 1048576UL * 20 }; // FIXME 10M 
+  enum { INTERNALHEAP_SIZE = 1048576UL * 20 };
   enum { PageSize = 4096UL };
   enum { PAGE_SIZE_MASK = (PageSize-1) };
-  enum { NUM_HEAPS = 32 }; // was 16
-  enum { PERIODIC_CHECKING_INTERVAL = 10000}; //5ms
+  enum { NUM_HEAPS = 32 };
+  enum { PERIODIC_CHECKING_INTERVAL = 10000};
   enum { CACHE_LINE_SIZE = 64};
   enum { CACHES_PER_PAGE = 64};
   enum { CACHELINE_SIZE_MASK = 0x3F};

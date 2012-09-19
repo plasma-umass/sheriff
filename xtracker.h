@@ -518,7 +518,7 @@ public:
           memcpy((void *)&objectinfo.callsite, (void *)((intptr_t)object + object->getCallsiteOffset()), object->getCallsiteLenth());
           
           // Check the first object for share type.
-          objectinfo.acess_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (struct wordchangeinfo *)objectinfo.wordchange_start);
+          objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (struct wordchangeinfo *)objectinfo.wordchange_start);
           ObjectTable::getInstance().insertObject(objectinfo);        
         }
           pos = (int *)nextobject;
@@ -577,7 +577,7 @@ public:
         objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
 
         // Check the first object for share type.
-        objectinfo.acess_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (struct wordchangeinfo *)objectinfo.wordchange_start);
+        objectinfo.access_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (struct wordchangeinfo *)objectinfo.wordchange_start);
         ObjectTable::getInstance().insertObject(objectinfo);
       }
     }

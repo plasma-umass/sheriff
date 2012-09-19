@@ -49,7 +49,7 @@
 #include "stlallocator.h"
 #include "warpheap.h"
 
-#include "sourceshareheap.h"
+#include "sourcesharedheap.h"
 #include "internalheap.h"
 #include "xoneheap.h"
 #include "xheap.h"
@@ -603,7 +603,7 @@ private:
   xglobals          _globals;
 
 #ifndef DETECT_FALSE_SHARING
-  warpheap<xdefines::NUM_HEAPS, xdefines::SHAREDHEAP_CHUNK,xoneheap<SourceShareHeap<xdefines::SHAREDHEAP_SIZE> > > _sheap;
+  warpheap<xdefines::NUM_HEAPS, xdefines::SHAREDHEAP_CHUNK,xoneheap<SourceSharedHeap<xdefines::SHAREDHEAP_SIZE> > > _sheap;
 #endif
 
   typedef std::set<void *, less<void *>,

@@ -17,8 +17,8 @@
 
 */
 
-#ifndef __OBJECTHEADER_H__
-#define __OBJECTHEADER_H__
+#ifndef SHERIFF_OBJECTHEADER_H
+#define SHERIFF_OBJECTHEADER_H
 
 /*
  * @file   objectheader.h
@@ -101,12 +101,12 @@ private:
 
 	bool sanityCheck (void) {
 #ifndef NDEBUG
-		if (_magic != MAGIC) {
-			fprintf (stderr, "HLY FK in %d. Current _magic %x at %p\n", getpid(), _magic, &_magic);
-			::abort();
-		}
+	  if (_magic != MAGIC) {
+	    fprintf (stderr, "Sanity check failed in process %d. Current _magic %x at %p\n", getpid(), _magic, &_magic);
+	    ::abort();
+	  }
 #endif
-		return true;
+	  return true;
 	}
 
 	size_t _magic;
@@ -116,4 +116,4 @@ private:
 #endif
 };
 
-#endif /* __OBJECTHEADER_H__ */
+#endif /* SHERIFF_OBJECTHEADER_H */
