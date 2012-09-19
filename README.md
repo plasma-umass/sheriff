@@ -3,8 +3,8 @@ Sheriff: Precise Detection and Automatic Mitigation of False Sharing
 
 Tongping Liu, Emery D. Berger
 
-<tonyliu@cs.umass.edu>
-<emery@cs.umass.edu>
+<tonyliu@cs.umass.edu>  
+<emery@cs.umass.edu>  
 
 <http://plasma.cs.umass.edu>
 
