@@ -20,62 +20,59 @@
 
 /*
  * @file   sourceshareheap.h
- * @brief  It is the source of internalheap. Basically, it is almost the same as 
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */
 
 
-#ifndef _XSOURCESHAREHEAP_H_
-#define _XSOURCESHAREHEAP_H_
+#ifndef SHERIFF_SOURCESHAREDHEAP_H
+#define SHERIFF_SOURCESHAREDHEAP_H
 
 #include "xdefines.h"
 #include "xplock.h"
 
-template <int Size>
-class SourceShareHeap
+template <unsigned long Size>
+class SourceSharedHeap
 {
 public:
 
-  SourceShareHeap (void)
+  SourceSharedHeap (void)
   {
-	char * base;
-
-	// Call mmap to allocate share map.
+    char * base;
+    
+    // Call mmap to allocate a shared map.
     base = (char *)mmap (NULL, xdefines::PageSize+Size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
-	// Put all "heap metadata" in this page.
+    // Put all heap metadata on this page.
     _position   = (char **)base;
     _remaining  = (size_t *)(base + 1 * sizeof(void *));
     _magic      = (size_t *)(base + 2 * sizeof(void *));
-  	_lock       = new (base + 3*sizeof(void *)) xplock;
-	
-	// Initialize the following content according the values of xpersist class.
+    _lock       = new (base + 3*sizeof(void *)) xplock;
+    
+    // Initialize the following content according the values of xpersist class.
     _start      = base + xdefines::PageSize;
     _end        = _start + Size;
     *_position  = (char *)_start;
     *_remaining = Size;
     *_magic     = 0xCAFEBABE;
-//    fprintf(stderr, "SHAREHEAP:_start %p end is %p remaining %p-%x, position %p-%x. OFFSET %x\n", _start, _end, _remaining, *_remaining, _position, *_position, (int)*_position-(int)_start);
   }
 
   // We need to page-aligned size, we don't need two different threads are using the same page here.
   inline void * malloc (size_t sz) {
     sanityCheck();
 
-    // Roud up the size to page aligned.
-	sz = xdefines::PageSize * ((sz + xdefines::PageSize - 1) / xdefines::PageSize);
-
-	_lock->lock();
-
-    //fprintf (stderr, "%d : xheap malloc size %x, remainning %p-%x and position %p-%x: OFFSET %x\n", getpid(), sz, _remaining, *_remaining, _position, *_position, (int)*_position-(int)_start);
+    // Round up the size to page aligned.
+    sz = xdefines::PageSize * ((sz + xdefines::PageSize - 1) / xdefines::PageSize);
+    
+    _lock->lock();
+    
     if (*_remaining == 0) { 
       fprintf (stderr, "FOOP: something very bad has happened: _start = %x, _position = %x, _remaining = %x.\n", *_start, *_position, *_remaining);
     }
    
     if (*_remaining < sz) {
       fprintf (stderr, "CRAP: remaining[%x], sz[%x] thread[%d]\n", *_remaining, sz, pthread_self());
-	  exit(-1);
+      exit(-1);
     }
     void * p = *_position;
 
@@ -84,7 +81,7 @@ public:
     *_remaining -= sz;
     *_position += sz;
 
-	_lock->unlock();
+    _lock->unlock();
 
     //fprintf (stderr, "%d : shareheapmalloc %p with size %x, remaining %x\n", getpid(), p, sz, *_remaining);
     return p;
