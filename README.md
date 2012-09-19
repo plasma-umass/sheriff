@@ -13,39 +13,37 @@ Copyright (C) 2011-2012 University of Massachusetts Amherst
 
 ### Building Sheriff ###
 
-You can build the sheriff library (`libsheriff.so`) by running `make`.
+Running `make` builds two variants of the Sheriff library, in 32-bit and 64-bit versions:
 
-*NOTE*: if your system does not support the SSE3 instruction set, then
-remove `SSE_SUPPORT` from the Makefile.
+1. *Sheriff_Protect*: Use either `libsheriff_protect32.so` or `libsheriff_protect64.so` as a replacement for the `pthreads` library to automatically eliminate false sharing problems.
 
-Also, check other configurations in the Makefile. For example, if you
-are on a 64-bit machine, make sure to use `-fno-omit-frame-pointer` if you want to detect a
-false sharing problem.
-
+2. *Sheriff_Detect*: Use either `libsheriff_detect32.so` or `libsheriff_detect64.so` to find false sharing problems (reported after the program finishes execution).
 
 ### Using Sheriff ###
 
 Sheriff currently supports Linux x86 platforms.
 
-1. Compile your program to object files (here, we use just one, target.o).
+1. Compile your program to object files (here, we use just one, `target.o`).
 
-2. Link to the sheriff library. There are two options (neither of which
-   is particular to sheriff).
+2. Link to the appropriate Sheriff library. There are two options (neither of which is particular to Sheriff).
 
   (a) Dynamic linking: this approach requires no environment variables,
-      but the sheriff library needs to be in a fixed, known location.
-      Place the sheriff library in a directory (`SHERIFF_DIR`).
+      but the Sheriff library needs to be in a fixed, known location.
+      Place the Sheriff library in a directory, e.g., `SHERIFF_DIR`.
 
       Then compile your program as follows:
 
-      % g++ target.o -rdynamic SHERIFF_DIR/libdsheriff.so -ldl -o target
+      % g++ target.o -rdynamic SHERIFF_DIR/libsheriff_variant.so -ldl -o target
 
   (b) Ordinary dynamic linking: this approach is more flexible (you can
-      change the location of the sheriff library), but you must also
+      change the location of the Sheriff library), but you must also
       set the `LD_LIBRARY_PATH` environment variable.
 
-      % g++ target.o -LSHERIFF_DIR -lsheriff -dl -o target
+      % g++ target.o -LSHERIFF_DIR -lsheriff_variant -dl -o target
       % export LD_LIBRARY_PATH=SHERIFF_DIR:$LD_LIBRARY_PATH
+
+When using Sheriff_Detect, all reports of any discovered false sharing
+instances are printed out after the program finishes execution.
 
 ### Citing Sheriff ###
 
