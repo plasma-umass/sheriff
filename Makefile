@@ -1,7 +1,25 @@
-SRCS = libsheriff.cpp realfuncs.cpp xthread.cpp dlmalloc.c finetime.c gnuwrapper.cpp 
-DEPS = $(SRCS) xpersist.h xdefines.h xglobals.h xpersist.h xplock.h xrun.h warpheap.h xadaptheap.h xoneheap.h
+SOURCE_DIR = source
+INCLUDE_DIR = include
 
-CXX = g++
+SRCS =  $(SOURCE_DIR)/libsheriff.cpp \
+	$(SOURCE_DIR)/realfuncs.cpp  \
+	$(SOURCE_DIR)/xthread.cpp    \
+	$(SOURCE_DIR)/dlmalloc.c     \
+	$(SOURCE_DIR)/finetime.c     \
+	$(SOURCE_DIR)/gnuwrapper.cpp
+
+INCS =  $(INCLUDE_DIR)/xpersist.h    \
+        $(INCLUDE_DIR)/xdefines.h    \
+	$(INCLUDE_DIR)/xglobals.h    \
+	$(INCLUDE_DIR)/xplock.h      \
+	$(INCLUDE_DIR)/xrun.h        \
+	$(INCLUDE_DIR)/warpheap.h    \
+	$(INCLUDE_DIR)/xadaptheap.h  \
+	$(INCLUDE_DIR)/xoneheap.h
+
+DEPS = $(SRCS) $(INCS)
+
+CXX = g++ -g -I$(INCLUDE_DIR)
 
 # Detection on 32bit
 # CXX = g++ -DSSE_SUPPORT -m32 -DX86_32BIT -O3 -fno-omit-frame-pointer -DDETECT_FALSE_SHARING
@@ -11,8 +29,8 @@ CXX = g++
 
 # -march=core2 -msse3 -DSSE_SUPPORT 
 CFLAGS   = -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
-CFLAGS32 = $(CFLAGS) -m32 -DX86_32BIT -O3
-CFLAGS64 = $(CFLAGS) -m64 -O3
+CFLAGS32 = $(CFLAGS) -m32 -DX86_32BIT # -O3
+CFLAGS64 = $(CFLAGS) -m64 # -O3
 
 INCLUDE_DIRS = -I. -I./heaplayers -I./heaplayers/util
 
