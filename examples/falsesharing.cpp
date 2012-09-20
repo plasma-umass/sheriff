@@ -13,15 +13,22 @@ public:
   volatile int x[MAX_THREADS];
 };
 
-Item monkey;
+#define SHARE_HEAP_OBJECT 1
 
-Item * theItem = &monkey;
+#if SHARE_HEAP_OBJECT
+Item * theItem;
+#else
+Item monkey;
+#endif
 
 void * worker (void * v) {
   long index = (long) v;
   for (int i = 0; i < NUM_ITERATIONS; i++) {
+#if SHARE_HEAP_OBJECT
+    theItem->x[index]++;
+#else
     monkey.x[index]++;
-    //    theItem->x[index]++;
+#endif
   }
   return NULL;
 }
