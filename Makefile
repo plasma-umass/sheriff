@@ -13,6 +13,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h    \
 	$(INCLUDE_DIR)/xglobals.h    \
 	$(INCLUDE_DIR)/xplock.h      \
 	$(INCLUDE_DIR)/xrun.h        \
+	$(INCLUDE_DIR)/xtracker.h    \
 	$(INCLUDE_DIR)/warpheap.h    \
 	$(INCLUDE_DIR)/xadaptheap.h  \
 	$(INCLUDE_DIR)/xoneheap.h
