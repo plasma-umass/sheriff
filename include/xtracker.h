@@ -78,13 +78,12 @@ public:
       return;
     }
   
-    // We sort those objects according to interleaving writes number.
+    // We sort those objects according to the number of interleaving writes.
     typedef ObjectTable::callsiteType ObjectType;
 
     ObjectType * objects = (ObjectType *)ObjectTable::getInstance().getCallsites();
 
     typedef std::greater<const int> localComparator;
-    //typedef std::map<const int, ObjectInfo, localComparator> objectListType;
     typedef HL::STLAllocator<ObjectType, privateheap> Allocator;    
     typedef std::multimap<const int, ObjectInfo, localComparator, Allocator> objectListType;
     objectListType objectlist;
@@ -101,31 +100,30 @@ public:
       if(object.interwrites < xdefines::MIN_INTERWRITES_OUTPUT) {
         continue;
       }
-      fprintf(stderr, "%dth object, cache interleaving writes %d times(%d per cacheline, %d times on actual %d lines, objectwrites %d), object start %x, len %d. It is a ", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
-      if(object.is_heap_object) {
-        fprintf(stderr, "heap object accumuated by %d, unit length %d, totallength %d, cachelines %d, callsite:\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
-        // Print those callsite information.
+      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual lines, object writes=%d)\n\tObject start = %x; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
+      if (object.is_heap_object) {
+        fprintf(stderr, "\tHeap object accumulated by %d, unit length %d, totallength %d, cachelines %d, callsite:\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
+
+        // Print callsite information.
         CallSite * callsite = (CallSite *)&object.callsite[0];
         for(int j = 0; j < callsite->get_depth(); j++) {
           int ipaddr = callsite->get_item(j);
           char command[MAXBUFSIZE];
             
-         //fprintf(stderr, "callsite %d: %lx", j, ipaddr);
          fprintf(stderr, "callsite %d %lx: ", j, ipaddr);
           if(ipaddr >= textStart && ipaddr <= textEnd) {
             sprintf(command, "%s %x", base, ipaddr);
-//            fprintf(stderr, "Command is %s\n", command);
             system(command);
           }
         }
         fprintf(stderr, "\n\n");
       }
       else {
-        // Print those object information about globals.
+        // Print object information about globals.
         Elf_Sym *symbol = find_symbol(&_elf_info, (intptr_t)object.start);
         if(symbol != NULL) {
           const char * symname = _elf_info.strtab + symbol->st_name;
-          fprintf(stderr, "global object: name \"%s\", start %lx and size %d\n", symname, symbol->st_value, symbol->st_size);
+          fprintf(stderr, "\tGlobal object: name \"%s\", start %lx, size %d\n", symname, symbol->st_value, symbol->st_size);
         }
       }
     }
