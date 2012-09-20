@@ -271,14 +271,14 @@ public:
     _tracker.checkWrites((int *)base(), size(),  _wordChanges); 
   #endif
 
-    if(!_isHeap) {
-      _tracker.checkGloblObjects(_cacheInvalidates, (int *)base(), size(), _wordChanges); 
+    if (!_isHeap) {
+      _tracker.checkGlobalObjects(_cacheInvalidates, (int *)base(), size(), _wordChanges); 
     }
     else {
       _tracker.checkHeapObjects(_cacheInvalidates, (int *)base(), (int *)end, _wordChanges);  
   }
 
-  // printf those object information.
+  // printf object information.
   if(_isBasicHeap) {
     _tracker.print_objects_info();
   }
@@ -325,7 +325,7 @@ public:
   
   void* mapRdPrivate(void * start, int size) {
     void * area;
-    int  offset = (intptr_t)start - (intptr_t)base();
+    off_t offset = (intptr_t)start - (intptr_t)base();
 
     // Map to readonly private area. 
     area = (Type *) mmap (start,

@@ -496,7 +496,7 @@ public:
           // Check how many objects are located in the first cache line.
           objectwrites = getObjectWrites(objectStart, nextobject, memstart, wordchange);
   
-          // Check how many object are located in the last cache line.
+          // Check how many objects are located in the last cache line.
           struct objectinfo objectinfo;
           
           // Save object information.
@@ -533,7 +533,7 @@ public:
     return ((start & xdefines::CACHELINE_SIZE_MASK) + size + xdefines::CACHE_LINE_SIZE - 1)/xdefines::CACHE_LINE_SIZE;
   }
 
-  void checkGloblObjects(unsigned long *cacheInvalidates, int * memBase, int size, struct wordchangeinfo * wordchange) {
+  void checkGlobalObjects(unsigned long *cacheInvalidates, int * memBase, int size, struct wordchangeinfo * wordchange) {
     struct elf_info *elf = &_elf_info;  
     Elf_Ehdr *hdr = elf->hdr;
     Elf_Sym *symbol;
@@ -558,7 +558,7 @@ public:
       long totalwrites = getObjectWrites((int *)objectStart, (int *)(objectStart + objectSize), memBase, wordchange);
       // For globals, only when we need to output this object then we need to store that.
       // Since there is no accumulation for global objects.
-      if(interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
+      if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
         // Save the object information
         struct objectinfo objectinfo;
         objectinfo.is_heap_object = true;
