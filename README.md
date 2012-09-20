@@ -46,7 +46,7 @@ instances are printed out after the program finishes execution.
 
 ### Citing Sheriff ###
 
-If you use sheriff, we would appreciate hearing about it. To cite
+If you use Sheriff, we would appreciate hearing about it. To cite
 Sheriff, please refer to the following paper, included as
 [`sheriff-oopsla2011.pdf`](https://github.com/plasma-umass/sheriff/blob/master/sheriff-oopsla2011.pdf?raw=true).
 
