@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef SHERIFF_XPERSIST_H
-#define SHERIFF_XPERSIST_H
+#ifndef _XPERSIST_H_
+#define _XPERSIST_H_
 
 #include <set>
 #include <list>
@@ -52,10 +52,9 @@ extern "C" int madvise(caddr_t addr, size_t len, int advice);
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 template <class Type,
-	  unsigned long NElts = 1>
+    long NElts = 1>
 class xpersist {
 public:
-
   typedef std::pair<int, void *> objType;
   
   typedef HL::STLAllocator<objType, privateheap> dirtyListTypeAllocator;
@@ -74,7 +73,7 @@ public:
 
   /// @arg startaddr  the optional starting address of the local memory.
   xpersist (void * startaddr = 0, 
-	    size_t startsize = 0)
+      size_t startsize = 0)
     : _startaddr (startaddr),
       _startsize (startsize)
   {
@@ -88,15 +87,15 @@ public:
     
     // Get a temporary file name (which had better not be NFS-mounted...).
     char _backingFname[L_tmpnam];
-    sprintf (_backingFname, "sheriffMXXXXXX");
+    sprintf (_backingFname, "graceMXXXXXX");
     _backingFd = mkstemp (_backingFname);
     if (_backingFd == -1) {
       fprintf (stderr, "Failed to make persistent file.\n");
       ::abort();
     }
     
-    // Set the files to the size of the desired object.
-    if (ftruncate (_backingFd,  NElts * sizeof(Type))) { 
+    // Set the files to the sizes of the desired object.
+    if(ftruncate(_backingFd,  NElts * sizeof(Type))) { 
       fprintf (stderr, "Mysterious error with ftruncate.\n");
       ::abort();
     }
@@ -107,19 +106,13 @@ public:
     //
     // Establish two maps to the backing file.
     //
-
     // The persistent map is shared.
     _persistentMemory = (Type *) mmap (NULL,
-				       NElts * sizeof(Type),
-				       PROT_READ | PROT_WRITE,
-				       MAP_SHARED,
-				       _backingFd,
-				       0);
-
-    if (_persistentMemory == MAP_FAILED) {
-      fprintf (stderr, "Failure to allocate memory.\n");
-      ::abort();
-    }
+               NElts * sizeof(Type),
+               PROT_READ | PROT_WRITE,
+               MAP_SHARED,
+               _backingFd,
+               0);
 
     // If we specified a start address (globals), copy the contents into the
     // persistent area now because the transient memory map is going
@@ -271,14 +264,14 @@ public:
     _tracker.checkWrites((int *)base(), size(),  _wordChanges); 
   #endif
 
-    if (!_isHeap) {
+    if(!_isHeap) {
       _tracker.checkGlobalObjects(_cacheInvalidates, (int *)base(), size(), _wordChanges); 
     }
     else {
       _tracker.checkHeapObjects(_cacheInvalidates, (int *)base(), (int *)end, _wordChanges);  
   }
 
-  // printf object information.
+  // printf those object information.
   if(_isBasicHeap) {
     _tracker.print_objects_info();
   }
@@ -325,7 +318,7 @@ public:
   
   void* mapRdPrivate(void * start, int size) {
     void * area;
-    off_t offset = (intptr_t)start - (intptr_t)base();
+    int  offset = (intptr_t)start - (intptr_t)base();
 
     // Map to readonly private area. 
     area = (Type *) mmap (start,

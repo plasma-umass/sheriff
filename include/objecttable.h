@@ -82,10 +82,14 @@ public:
     callsiteType::iterator i;
     CallSite callsite;
     
-    memcpy(&callsite, object.callsite, CALL_SITE_DEPTH * sizeof(unsigned long));
 
     // Check whether the callsite is there?
+    // That is, we are trying to combine multipe objects with the same callsite
+    // to one object. 
     if(object.is_heap_object) {
+      memcpy(&callsite, object.callsite, CALL_SITE_DEPTH * sizeof(unsigned long));
+
+      // Check whether we can find this callsite
       i = _callsites.find(callsite);
 
       if(i != _callsites.end()) {
@@ -104,6 +108,10 @@ public:
         _callsites.insert(objectPair(callsite, object));
       }
     } 
+    else {
+      object.times = 1;
+      _callsites.insert(objectPair(callsite, object));
+    }
   }
 
   int getObjectsNum(void) {

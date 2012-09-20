@@ -68,13 +68,14 @@ public:
     #define MAXBUFSIZE 1024
     char base[MAXBUFSIZE];
     int k = 0;      
- 
+
     sprintf(base, "addr2line -e %s", _exec_filename);
   
     if(ObjectTable::getInstance().getObjectsNum() > 0) {
       fprintf(stderr, "\nFalse sharing objects information:\n");
     }
     else {
+      //fprintf(stderr, "\nNo false sharing objects information:\n");
       return;
     }
   
@@ -93,15 +94,17 @@ public:
        ObjectInfo & object = i->second;
        objectlist.insert(pair<int, ObjectInfo>(object.interwrites, object));
     }
+
     for(objectListType::iterator i = objectlist.begin(); i != objectlist.end(); i++) {
       struct objectinfo & object = i->second;
       k++;
-  
+
+        
       if(object.interwrites < xdefines::MIN_INTERWRITES_OUTPUT) {
         continue;
       }
       fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual lines, object writes=%d)\n\tObject start = %x; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
-      if (object.is_heap_object) {
+      if (object.is_heap_object == true) {
         fprintf(stderr, "\tHeap object accumulated by %d, unit length %d, totallength %d, cachelines %d, callsite:\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
 
         // Print callsite information.
@@ -561,10 +564,12 @@ public:
       if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
         // Save the object information
         struct objectinfo objectinfo;
-        objectinfo.is_heap_object = true;
+        objectinfo.is_heap_object = false;
+        //objectinfo.is_heap_object = true;
         objectinfo.interwrites = interwrites;
         objectinfo.totalwrites = totalwrites;
         objectinfo.unitlength = symbol->st_size;
+        //fprintf(stderr, "get globals with interwirtes larger than 0, interwrites %d\n", interwrites); 
         objectinfo.lines = lines;
         objectinfo.actuallines = actuallines;
         objectinfo.totallength = symbol->st_size;
