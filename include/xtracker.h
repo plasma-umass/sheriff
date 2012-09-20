@@ -22,21 +22,20 @@
 #include "elfinfo.h"
 #include "fshareinfo.h"
 
-#define MAXBUFSIZE 1024
-
 template <int NElts = 1>
 class xtracker {
   
   enum { PAGE_SIZE = 4096 };
+  enum { MAXBUFSIZE = 1024 };
+
 public:
 
-  /// @arg startaddr  the optional starting address of the local memory.
-  xtracker ()
+  xtracker()
   {
     int    count;
     void * ptr;
 
-    if(NElts == xdefines::PROTECTEDHEAP_SIZE)
+    if (NElts == xdefines::PROTECTEDHEAP_SIZE)
       _isHeap = true;
 
     /* Get current executable file name. */
@@ -60,22 +59,22 @@ public:
     parse_elf();
   }
 
-  virtual ~xtracker (void) {
+  virtual ~xtracker() {
     release_file(_elf_info.hdr, _elf_info.size);
   }
  
-  void print_objects_info(void) {
-    #define MAXBUFSIZE 1024
+  void print_objects_info() {
+
     char base[MAXBUFSIZE];
     int k = 0;      
 
-    sprintf(base, "addr2line -e %s", _exec_filename);
+    sprintf (base, "addr2line -e %s", _exec_filename);
   
-    if(ObjectTable::getInstance().getObjectsNum() > 0) {
-      fprintf(stderr, "\nFalse sharing objects information:\n");
+    if (ObjectTable::getInstance().getObjectsNum() > 0) {
+      fprintf(stderr, "Sheriff-Detect: false sharing detected.\n");
     }
     else {
-      //fprintf(stderr, "\nNo false sharing objects information:\n");
+      fprintf(stderr, "Sheriff-Detect: no false sharing found.\n");
       return;
     }
   
@@ -103,17 +102,18 @@ public:
       if(object.interwrites < xdefines::MIN_INTERWRITES_OUTPUT) {
         continue;
       }
-      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual lines, object writes=%d)\n\tObject start = %x; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
+      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual line(s), object writes = %d)\n\tObject start = %x; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
       if (object.is_heap_object == true) {
-        fprintf(stderr, "\tHeap object accumulated by %d, unit length %d, totallength %d, cachelines %d, callsite:\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
+        fprintf(stderr, "\tHeap object accumulated by %d, unit length = %d, total length = %d, cache lines = %d.\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
 
         // Print callsite information.
-        CallSite * callsite = (CallSite *)&object.callsite[0];
+	fprintf (stderr, "Object allocation call site information:\n");
+        CallSite * callsite = (CallSite *) &object.callsite[0];
         for(int j = 0; j < callsite->get_depth(); j++) {
           int ipaddr = callsite->get_item(j);
           char command[MAXBUFSIZE];
             
-         fprintf(stderr, "callsite %d %lx: ", j, ipaddr);
+         fprintf(stderr, "Call site %d %lx: ", j, ipaddr);
           if(ipaddr >= textStart && ipaddr <= textEnd) {
             sprintf(command, "%s %x", base, ipaddr);
             system(command);
@@ -203,7 +203,7 @@ public:
     return; 
   }
 
-  int parse_elf(void)
+  int parse_elf()
   {
     unsigned int i;
     Elf_Ehdr *hdr = _elf_info.hdr;
@@ -271,7 +271,7 @@ public:
     munmap(file, size);
   }
 
-  void finalize(void) {
+  void finalize() {
   }
   
   void printCacheline(int * start) {
@@ -347,7 +347,7 @@ public:
       writes = calcCacheWrites(&wordchange[pos-base], xdefines::CACHE_LINE_SIZE);
   
       if(writes > xdefines::MIN_WRITES_CARE) {
-        fprintf(stderr, "%d: cachewrites %d on %p\n", i++, writes, pos);
+        fprintf(stderr, "%d: cache writes %d on %p\n", i++, writes, pos);
       }
   
       pos += 16;
@@ -485,13 +485,17 @@ public:
         long   actuallines = 0;
   
         writes = getCacheInvalidates(cacheStart, lines, cacheInvalidates, &actuallines);
+
+	// EDB: Disabled (does it serve any purpose beyond the report printed below?).
+
+#if 0
         if(cacheInvalidates[cacheStart] > 20) {
           fprintf(stderr, "writes %ld on pos %p nextobject %p. lines %ld\n", writes, pos, nextobject, lines);
         } 
-   
+#endif   
    
         if(writes > xdefines::MIN_INTERWRITES_CARE) {
-          // Check whether current object cause enough invalidates or not.
+          // Check whether the current object causes enough invalidations or not.
           // We only need to check two ends for continuous memory allocation for same callsite.
           long units = ((intptr_t)nextobject - (intptr_t)pos)/(unitsize+sizeof(objectHeader));
           long objectwrites;
@@ -587,9 +591,10 @@ public:
   } 
  
 private:
+
   struct elf_info _elf_info;
 
-  /* Profiling type. */
+  // Profiling type.
   bool _isHeap;
   
   char _exec_filename[MAXBUFSIZE];
