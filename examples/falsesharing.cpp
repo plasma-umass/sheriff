@@ -13,12 +13,15 @@ public:
   volatile int x[MAX_THREADS];
 };
 
-Item * theItem;
+Item monkey;
+
+Item * theItem = &monkey;
 
 void * worker (void * v) {
   long index = (long) v;
   for (int i = 0; i < NUM_ITERATIONS; i++) {
-    theItem->x[index]++;
+    monkey.x[index]++;
+    //    theItem->x[index]++;
   }
   return NULL;
 }
@@ -32,6 +35,7 @@ main()
   pthread_t thread[MAX_THREADS];
 
   cout << "Starting threads." << endl;
+  cout << "theItem is at " << (void *) &theItem << endl;
 
   for (int i = 0; i < 8; i++) {
     pthread_create (&thread[i], NULL, worker, (void *) i);
