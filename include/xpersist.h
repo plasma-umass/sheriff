@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _XPERSIST_H_
-#define _XPERSIST_H_
+#ifndef SHERIFF_XPERSIST_H
+#define SHERIFF_XPERSIST_H
 
 #include <set>
 #include <list>
@@ -52,9 +52,10 @@ extern "C" int madvise(caddr_t addr, size_t len, int advice);
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 template <class Type,
-    long NElts = 1>
+	  unsigned long NElts = 1>
 class xpersist {
 public:
+
   typedef std::pair<int, void *> objType;
   
   typedef HL::STLAllocator<objType, privateheap> dirtyListTypeAllocator;
@@ -73,7 +74,7 @@ public:
 
   /// @arg startaddr  the optional starting address of the local memory.
   xpersist (void * startaddr = 0, 
-      size_t startsize = 0)
+	    size_t startsize = 0)
     : _startaddr (startaddr),
       _startsize (startsize)
   {
@@ -87,15 +88,15 @@ public:
     
     // Get a temporary file name (which had better not be NFS-mounted...).
     char _backingFname[L_tmpnam];
-    sprintf (_backingFname, "graceMXXXXXX");
+    sprintf (_backingFname, "sheriffMXXXXXX");
     _backingFd = mkstemp (_backingFname);
     if (_backingFd == -1) {
       fprintf (stderr, "Failed to make persistent file.\n");
       ::abort();
     }
     
-    // Set the files to the sizes of the desired object.
-    if(ftruncate(_backingFd,  NElts * sizeof(Type))) { 
+    // Set the files to the size of the desired object.
+    if (ftruncate (_backingFd,  NElts * sizeof(Type))) { 
       fprintf (stderr, "Mysterious error with ftruncate.\n");
       ::abort();
     }
@@ -106,13 +107,19 @@ public:
     //
     // Establish two maps to the backing file.
     //
+
     // The persistent map is shared.
     _persistentMemory = (Type *) mmap (NULL,
-               NElts * sizeof(Type),
-               PROT_READ | PROT_WRITE,
-               MAP_SHARED,
-               _backingFd,
-               0);
+				       NElts * sizeof(Type),
+				       PROT_READ | PROT_WRITE,
+				       MAP_SHARED,
+				       _backingFd,
+				       0);
+
+    if (_persistentMemory == MAP_FAILED) {
+      fprintf (stderr, "Failure to allocate memory.\n");
+      ::abort();
+    }
 
     // If we specified a start address (globals), copy the contents into the
     // persistent area now because the transient memory map is going
