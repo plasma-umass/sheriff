@@ -24,11 +24,12 @@
  */ 
     
 
-#ifndef __OBJECT_TABLE_H__
-#define __OBJECT_TABLE_H__
+#ifndef SHERIFF_OBJECTTABLE_H
+#define SHERIFF_OBJECTTABLE_H
 
 #include <map>
-#include <ext/hash_map>
+//#include <unordered_map>
+#include <hash_map>
 #include <stdio.h>
 #include <callsite.h>
 #include <internalheap.h>
@@ -126,4 +127,4 @@ private:
   callsiteType _callsites;
 
 };
-#endif /* __OBJECT_TABLE_H__ */
+#endif /* SHERIFF_OBJECTTABLE_H */
