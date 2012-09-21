@@ -8,15 +8,27 @@ SRCS =  $(SOURCE_DIR)/libsheriff.cpp \
 	$(SOURCE_DIR)/finetime.c     \
 	$(SOURCE_DIR)/gnuwrapper.cpp
 
-INCS =  $(INCLUDE_DIR)/xpersist.h    \
-        $(INCLUDE_DIR)/xdefines.h    \
-	$(INCLUDE_DIR)/xglobals.h    \
-	$(INCLUDE_DIR)/xplock.h      \
-	$(INCLUDE_DIR)/xrun.h        \
-	$(INCLUDE_DIR)/xtracker.h    \
-	$(INCLUDE_DIR)/warpheap.h    \
-	$(INCLUDE_DIR)/xadaptheap.h  \
-	$(INCLUDE_DIR)/xoneheap.h
+INCS =  $(INCLUDE_DIR)/xpersist.h     \
+	$(INCLUDE_DIR)/xadaptheap.h   \
+        $(INCLUDE_DIR)/xdefines.h     \
+	$(INCLUDE_DIR)/xglobals.h     \
+	$(INCLUDE_DIR)/xoneheap.h     \
+	$(INCLUDE_DIR)/xpageinfo.h    \
+	$(INCLUDE_DIR)/xpageprof.h    \
+	$(INCLUDE_DIR)/xpagestore.h   \
+	$(INCLUDE_DIR)/xplock.h       \
+	$(INCLUDE_DIR)/xrun.h         \
+	$(INCLUDE_DIR)/xtracker.h     \
+	$(INCLUDE_DIR)/warpheap.h     \
+	$(INCLUDE_DIR)/callsite.h     \
+	$(INCLUDE_DIR)/finetime.h     \
+	$(INCLUDE_DIR)/fshareinfo.h   \
+	$(INCLUDE_DIR)/internalheap.h \
+	$(INCLUDE_DIR)/objectheader.h \
+	$(INCLUDE_DIR)/objecttable.h  \
+	$(INCLUDE_DIR)/privateheap.h  \
+	$(INCLUDE_DIR)/realfuncs.h    \
+	$(INCLUDE_DIR)/sourcesharedheap.h
 
 DEPS = $(SRCS) $(INCS)
 
