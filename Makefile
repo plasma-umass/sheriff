@@ -18,6 +18,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xpagestore.h   \
 	$(INCLUDE_DIR)/xplock.h       \
 	$(INCLUDE_DIR)/xrun.h         \
+	$(INCLUDE_DIR)/xsync.h        \
 	$(INCLUDE_DIR)/xtracker.h     \
 	$(INCLUDE_DIR)/warpheap.h     \
 	$(INCLUDE_DIR)/callsite.h     \
