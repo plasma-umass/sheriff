@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _XPERSIST_H_
-#define _XPERSIST_H_
+#ifndef SHERIFF_XPERSIST_H
+#define SHERIFF_XPERSIST_H
 
 #include <set>
 #include <list>
@@ -71,35 +71,36 @@ public:
     PAGE_TYPE_INVALID
   };
 
-  /// @arg startaddr  the optional starting address of the local memory.
+  /// @arg startaddr  the optional starting address of local memory.
+  /// @arg startsize  the optional size of local memory.
   xpersist (void * startaddr = 0, 
-      size_t startsize = 0)
+	    size_t startsize = 0)
     : _startaddr (startaddr),
       _startsize (startsize)
   {
     if (_startsize > 0) {
       if (_startsize > NElts * sizeof(Type)) {
         fprintf (stderr, "This persistent region (%d) is too small (%d).\n",
-                NElts * sizeof(Type), _startsize);
+		 NElts * sizeof(Type), _startsize);
         ::abort();
       }
     }
     
     // Get a temporary file name (which had better not be NFS-mounted...).
     char _backingFname[L_tmpnam];
-    sprintf (_backingFname, "graceMXXXXXX");
+    sprintf (_backingFname, "/tmp/sheriff-backing-XXXXXX");
     _backingFd = mkstemp (_backingFname);
     if (_backingFd == -1) {
       fprintf (stderr, "Failed to make persistent file.\n");
       ::abort();
     }
-    
+
     // Set the files to the sizes of the desired object.
-    if(ftruncate(_backingFd,  NElts * sizeof(Type))) { 
+    if (ftruncate (_backingFd,  NElts * sizeof(Type))) { 
       fprintf (stderr, "Mysterious error with ftruncate.\n");
       ::abort();
     }
-    
+
     // Get rid of the files when we exit.
     unlink (_backingFname);
 
@@ -108,11 +109,18 @@ public:
     //
     // The persistent map is shared.
     _persistentMemory = (Type *) mmap (NULL,
-               NElts * sizeof(Type),
-               PROT_READ | PROT_WRITE,
-               MAP_SHARED,
-               _backingFd,
-               0);
+				       NElts * sizeof(Type),
+				       PROT_READ | PROT_WRITE,
+				       MAP_SHARED,
+				       _backingFd,
+				       0);
+
+    if (_persistentMemory == MAP_FAILED) {
+      char buf[255];
+      sprintf (buf, "Failed to allocate memory (%u).\n", NElts * sizeof(Type));
+      fprintf (stderr, buf);
+      ::abort();
+    }
 
     // If we specified a start address (globals), copy the contents into the
     // persistent area now because the transient memory map is going
@@ -130,16 +138,15 @@ public:
         _isBasicHeap = false; 
     }
   
-    // The transient map is private and optionally fixed at the
-    // desired start address.
-    // In order to get the same copy with _persistentMemory for those constructor stuff,
-    // we will set to MAP_PRIVATE at first, then memory protection will be opened in initialize().
+    // The transient map is optionally fixed at the desired start
+    // address.
+
     _transientMemory = (Type *) mmap (_startaddr,
-                NElts * sizeof(Type),
-                PROT_READ | PROT_WRITE,
-                MAP_SHARED | (startaddr != NULL ? MAP_FIXED : 0),
-                _backingFd,
-                0);
+				      NElts * sizeof(Type),
+				      PROT_READ | PROT_WRITE,
+				      MAP_SHARED | (startaddr != NULL ? MAP_FIXED : 0),
+				      _backingFd,
+				      0);
     
     _isProtected = false;
   
@@ -197,7 +204,7 @@ public:
         -1,
         0);
 
-    // FIXME: Didn't make sense to have this since most of pages are not shared.
+    // FIXME: Didn't make sense to have this since most pages are not shared.
     _wordChanges = (struct wordchangeinfo *)
       mmap (NULL,
         TotalWordNums * sizeof(struct wordchangeinfo),
