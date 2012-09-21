@@ -1,5 +1,7 @@
-#ifndef _XSYNC_H_
-#define _XSYNC_H_
+// -*- C++ -*-
+
+#ifndef SHERIFF_XSYNC_H
+#define SHERIFF_XSYNC_H
 
 #include <map>
 
@@ -39,20 +41,6 @@ public:
 
     pthread_barrierattr_init(&_barrier_attr);
     pthread_barrierattr_setpshared (&_barrier_attr, PTHREAD_PROCESS_SHARED);
-  }
-
-  inline void * allocSyncEntry(void *origentry, int size) {
-    void * entry = ((void *)InternalHeap::getInstance().malloc(size));
-    setSyncEntry(origentry, entry);
-
-    return entry; 
-  }
-
-  inline void deallocSyncEntry(void *ptr) {
-    void * realentry = getSyncEntry(ptr);
-
-    assert(realentry);
-    InternalHeap::getInstance().free(realentry);
   }
 
   /// @brief Initialize the lock.
@@ -98,16 +86,6 @@ public:
   /// @brief Destroy the lock.
   inline int mutex_destroy (pthread_mutex_t * lck) {
     deallocSyncEntry(lck);
-  }
-
-  inline pthread_mutex_t * getRealMutex(void * lck) {
-    pthread_mutex_t * mutex = (pthread_mutex_t *)getSyncEntry(lck);
-
-    if(mutex ==NULL) {
-      // Whenever it is not allocated, then we will try to allocate one.
-      mutex = mutex_init((pthread_mutex_t *)lck, true);
-    }
-    return mutex; 
   }
 
   pthread_cond_t * cond_init(void * cond, bool needProtect) {
@@ -156,15 +134,6 @@ public:
     return WRAP(pthread_cond_broadcast)(realCond);
   }
  
-  inline pthread_cond_t * getRealCond(void * cond) {
-    pthread_cond_t * realcond = (pthread_cond_t *)getSyncEntry(cond);
-
-    if(!realcond) {
-      // Whenever it is not allocated, then we will try to allocate one.
-      realcond = cond_init(cond, true);
-    } 
-    return realcond;
-  }
   /// @brief Initialize the barrier.
   int barrier_init(void * barrier, unsigned int count) {
 
@@ -193,6 +162,32 @@ public:
     // Release this part of memory.
     deallocSyncEntry(barrier);
     return 0;
+  }
+
+private:
+
+  inline void * allocSyncEntry(void *origentry, int size) {
+    void * entry = ((void *)InternalHeap::getInstance().malloc(size));
+    setSyncEntry(origentry, entry);
+
+    return entry; 
+  }
+
+  inline void deallocSyncEntry(void *ptr) {
+    void * realentry = getSyncEntry(ptr);
+
+    assert(realentry);
+    InternalHeap::getInstance().free(realentry);
+  }
+
+  inline pthread_cond_t * getRealCond(void * cond) {
+    pthread_cond_t * realcond = (pthread_cond_t *)getSyncEntry(cond);
+
+    if(!realcond) {
+      // Whenever it is not allocated, then we will try to allocate one.
+      realcond = cond_init(cond, true);
+    } 
+    return realcond;
   }
 
   void clearSyncEntry(void * origentry) {
@@ -229,8 +224,16 @@ public:
     return result;
   }
 
+  inline pthread_mutex_t * getRealMutex(void * lck) {
+    pthread_mutex_t * mutex = (pthread_mutex_t *)getSyncEntry(lck);
 
-private:
+    if(mutex ==NULL) {
+      // Whenever it is not allocated, then we will try to allocate one.
+      mutex = mutex_init((pthread_mutex_t *)lck, true);
+    }
+    return mutex; 
+  }
+
   void lock(void) {
     _global_sync_lock.lock();
   }
