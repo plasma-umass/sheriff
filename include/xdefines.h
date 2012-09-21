@@ -2,7 +2,7 @@
 
 /*
  
-  Copyright (c) 2007-8 Emery Berger, University of Massachusetts Amherst.
+  Copyright (c) 2007-2012 Emery Berger, University of Massachusetts Amherst.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,15 +47,19 @@ extern "C"
   extern int textStart, textEnd;
 
   // If one transaction is less than 5ms, then we will close the protection.
-  #define THRESH_TRAN_LENGTH (5000)
-  #define CHECK_AGAIN_NO_PROTECTION (50)
-  #define CHECK_AGAIN_UNDER_PROTECTION (1)
+  enum { THRESH_TRAN_LENGTH = 5000 };
+
+  enum { CHECK_AGAIN_NO_PROTECTION = 50 };
+
+  enum { CHECK_AGAIN_UNDER_PROTECTION = 1 };
+
   struct wordchangeinfo {
     unsigned short tid;
     unsigned short version;
   };
 
-  #define CALL_SITE_DEPTH 2
+  enum { CALL_SITE_DEPTH = 2 };
+
 #ifdef GET_CHARACTERISTICS
   extern int allocTimes;
   extern int cleanupSize;
@@ -103,9 +107,13 @@ extern "C"
 class xdefines {
 public:
   enum { STACK_SIZE = 1024 * 1024 };
-#ifndef DETECT_FALSE_SHARING
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 200 };
+#ifdef X86_32BIT
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 600 };
+#else
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 6000 };
+#endif
   enum { SHAREDHEAP_SIZE = 1048576UL * 800 };
+#ifndef DETECT_FALSE_SHARING
   enum { PROTECTEDHEAP_CHUNK = 40960 };
   enum { SHAREDHEAP_CHUNK = 1048576};
   enum { LARGE_CHUNK = 1024 };
@@ -113,12 +121,6 @@ public:
   enum { EVAL_TOTAL_TRANS = 8 };
   enum { EVAL_LEAST_INVALIDATES = 1000 };
 #else
-#ifdef X86_32BIT
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 600 };
-#else
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 6000 };
-#endif
-
   enum { PROTECTEDHEAP_CHUNK = 1048576 };
   enum { LARGE_CHUNK = 1024 };
   enum { EVAL_LARGE_HEAP_BASE = 1000 };
