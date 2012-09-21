@@ -57,23 +57,22 @@ public:
     *_magic     = 0xCAFEBABE;
   }
 
-  // We need to page-aligned size, we don't need two different threads are using the same page here.
   inline void * malloc (size_t sz) {
     sanityCheck();
+
+    // We need to page-align size, since we don't want two different
+    // threads using the same page.
 
     // Round up the size to page aligned.
     sz = xdefines::PageSize * ((sz + xdefines::PageSize - 1) / xdefines::PageSize);
     
     _lock->lock();
     
-    if (*_remaining == 0) { 
-      fprintf (stderr, "FOOP: something very bad has happened: _start = %x, _position = %x, _remaining = %x.\n", *_start, *_position, *_remaining);
-    }
-   
     if (*_remaining < sz) {
-      fprintf (stderr, "CRAP: remaining[%x], sz[%x] thread[%d]\n", *_remaining, sz, pthread_self());
+      fprintf (stderr, "Out of memory error: available = %u, requested = %u, thread = %d.\n", *_remaining, sz, pthread_self());
       exit(-1);
     }
+
     void * p = *_position;
 
 
