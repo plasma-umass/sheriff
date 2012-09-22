@@ -19,8 +19,8 @@
 
 */
 
-#ifndef _INTERNALHEAP_H_
-#define _INTERNALHEAP_H_
+#ifndef SHERIFF_INTERNALHEAP_H
+#define SHERIFF_INTERNALHEAP_H
 
 #include "xdefines.h"
 #include "objectheader.h"
@@ -33,7 +33,7 @@
 #include "zoneheap.h"
 /**
  * @file InternalHeap.h
- * @brief A share heap for internal allocation needs.
+ * @brief A shared heap for internal allocation needs.
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  *
  */
@@ -57,7 +57,7 @@ public:
       MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 #endif
       if(start == NULL) {
-        fprintf(stderr, "Failed to create a internal share heap.\n");
+        fprintf(stderr, "Failed to create an internal shared heap.\n");
         exit(1);
       }
       
@@ -147,7 +147,7 @@ public:
     // Allocate a lock to use internally
     _lock = new (mmap (NULL, sizeof(pthread_mutex_t), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0)) pthread_mutex_t;
     if(_lock == NULL) {
-      printf("Fail to initialize an internal lock for monitor map\n");
+      printf("Failed to initialize an internal lock for monitor map.\n");
       _exit(-1);
     }
 
