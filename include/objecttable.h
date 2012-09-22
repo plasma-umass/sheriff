@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 /*
   Copyright (C) 2011 University of Massachusetts Amherst.
 
@@ -84,10 +86,10 @@ public:
     CallSite callsite;
     
 
-    // Check whether the callsite is there?
-    // That is, we are trying to combine multipe objects with the same callsite
-    // to one object. 
-    if(object.is_heap_object) {
+    // Check whether the callsite is there? Try to combine multiple
+    // objects with the same callsite into one object.
+
+    if (object.is_heap_object) {
       memcpy(&callsite, object.callsite, CALL_SITE_DEPTH * sizeof(unsigned long));
 
       // Check whether we can find this callsite
@@ -115,15 +117,16 @@ public:
     }
   }
 
-  int getObjectsNum(void) {
+  int getObjectsNum() const {
     return _callsites.size();
   }
 
-  void * getCallsites(void) {
+  void * getCallsites() const {
     return ((void *)&_callsites);
   }
 
 private:
+
   callsiteType _callsites;
 
 };
