@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _XTHREAD_H_
-#define _XTHREAD_H_
+#ifndef SHERIFF_XTHREAD_H
+#define SHERIFF_XTHREAD_H
 
 #include <errno.h>
 
@@ -41,7 +41,7 @@ private:
 	forked (f)
     {}
 
-    ThreadStatus (void)
+    ThreadStatus()
     {}
 
     /// The thread id.
@@ -56,9 +56,9 @@ private:
 
 public:
 
-  xthread (void)
+  xthread()
     : _nestingLevel (0),
-	  _protected (false)
+      _protected (false)
   {
   }
 
@@ -79,7 +79,7 @@ public:
   void cancel (xrun * runner, void * v);
   void thread_kill (xrun * runner, void *v, int sig);
 
-  inline int getId (void) const {
+  inline int getId() const {
     return _tid;
   }
 
@@ -87,15 +87,6 @@ public:
     _tid = id;
   }
 
-#if 0
-  inline void setHeapId(void) {
-	_heapid = xheapid::getInstance().acquireHeapId(); 
-  }
-
-  inline int getHeapId(void) {
-	return _heapid;
-  }
-#endif
 
 private:
 
