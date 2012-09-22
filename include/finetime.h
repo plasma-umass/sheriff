@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 /*
   Copyright (C) 2011 University of Massachusetts Amherst.
 
@@ -17,8 +19,9 @@
 
 */
 
-#ifndef __TIME_H__
-#define __TIME_H__
+#ifndef SHERIFF_FINETIME_H
+#define SHERIFF_FINETIME_H
+
 /*
  * @file   finetime.h
  * @brief  Fine timing management based on rdtsc.
@@ -28,13 +31,15 @@
 
 
 extern "C" {
-struct timeinfo {
-	unsigned long low;
-	unsigned long high;
-};
 
-void start(struct timeinfo *ti);
-double stop(struct timeinfo * begin, struct timeinfo * end);
-unsigned long elapse2ms(double elapsed);
+  struct timeinfo {
+    unsigned long low;
+    unsigned long high;
+  };
+  
+  void start  (struct timeinfo *ti);
+  double stop (struct timeinfo * begin, struct timeinfo * end);
+  unsigned long elapsed2ms(double elapsed);
+
 };
 #endif /* __TIME_H__ */

@@ -24,21 +24,11 @@
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <limits.h>
-#include <string.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-
+#include <limits.h>
 
 #include "finetime.h"
-double cpu_freq = 2327507.08008;
+double cpu_freq = 2327507.08008; // FIX ME What?
 
 void __get_time(struct timeinfo * ti)
 {
@@ -63,7 +53,7 @@ double __count_elapse(struct timeinfo * start, struct timeinfo * stop)
 	return elapsed;
 }
 
-double get_elapse(struct timeinfo * start, struct timeinfo * stop)
+double get_elapse (struct timeinfo * start, struct timeinfo * stop)
 {
 	double elapse = 0.0;
    	elapse = __count_elapse(start, stop);
@@ -76,7 +66,7 @@ double get_elapse(struct timeinfo * start, struct timeinfo * stop)
        	*****
  	elapse = stop();
 		
-	time = elapse2us();
+	time = elapsed2us();
  */
 
 void start(struct timeinfo *ti)
@@ -107,7 +97,7 @@ double stop(struct timeinfo * begin, struct timeinfo * end)
 }
 
 /* Provide a function to turn the elapse time to microseconds. */
-unsigned long elapse2ms(double elapsed)
+unsigned long elapsed2ms(double elapsed)
 {
 	unsigned long ms;
 //	ms =(unsigned long)(elapsed*1000000.0/cpu_freq);

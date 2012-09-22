@@ -297,8 +297,8 @@ Remalloc_again:
 #endif
 } 
 
-  inline int getElapseMs(void) {
-    return (elapse2ms(stop(&_lasttime, NULL)));
+  inline int getElapsedMs(void) {
+    return (elapsed2ms(stop(&_lasttime, NULL)));
   }
 
   // We are using the "exponential moving average" here.
@@ -326,7 +326,7 @@ Remalloc_again:
 
     // Check for the transaction length
     if(_protection && (trans-_lasttrans > CHECK_AGAIN_UNDER_PROTECTION)) {
-      elapse = getElapseMs();
+      elapse = getElapsedMs();
       double ema = getAverage(elapse, trans);
 
       // Don't protect if tran length is shorter than predefined threshold.
@@ -345,7 +345,7 @@ Remalloc_again:
     else if(!_protection && trans - _lasttrans > CHECK_AGAIN_NO_PROTECTION) {
       // If we are not protected, we check periodically whether transaction
       // length is long enough.
-      elapse = getElapseMs();
+      elapse = getElapsedMs();
       double ema = getAverage(elapse, trans);
       if(ema > THRESH_TRAN_LENGTH) {
         // Open protection again. 
@@ -408,7 +408,7 @@ Remalloc_again:
 #endif
 
   void evalCheckingTimer(int trans) {
-    int elapse = getElapseMs();
+    int elapse = getElapsedMs();
     double ema = getAverage(elapse, trans);
 
     if(ema <= xdefines::PERIODIC_CHECKING_INTERVAL*2) {

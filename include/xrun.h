@@ -28,8 +28,8 @@
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */
 
-#ifndef _XRUN_H_
-#define _XRUN_H_
+#ifndef SHERIFF_XRUN_H
+#define SHERIFF_XRUN_H
 
 #include "xdefines.h"
 
@@ -61,7 +61,7 @@ private:
 
 public:
 
-  static xrun& getInstance (void) {
+  static xrun& getInstance() {
     static char buf[sizeof(xrun)];
     static xrun * theOneTrueObject = new (buf) xrun();
 
@@ -129,13 +129,14 @@ public:
   }
 
   /* Thread-related functions. */
+
   /// @ Return the main thread's id.
-  inline int main_id(void) {
-  return _tid;
+  inline int main_id() const {
+    return _tid;
   }
 
   /// @return the "thread" id.
-  inline int id (void) const {
+  inline int id() const {
     return _thread.getId();
   }
 
@@ -157,11 +158,11 @@ public:
   }
 
   /// @brief Do a pthread_cancel
-  inline void cancel(void *v) {
+  inline void cancel (void *v) {
     _thread.cancel(this, v);
   }
 
-  inline void thread_kill(void *v, int sig) {
+  inline void thread_kill (void *v, int sig) {
     atomicEnd(true, true);
     _thread.thread_kill(this, v, sig);
     atomicBegin(false, false);
@@ -187,9 +188,8 @@ public:
     return _memory.getSize (ptr);
   }
 
-  inline void * realloc(void * ptr, size_t sz) {
+  inline void * realloc (void * ptr, size_t sz) {
     void * newptr;
-    //fprintf(stderr, "realloc ptr %p sz %x\n", ptr, sz);
     if (ptr == NULL) {
       newptr = malloc(sz);
       return newptr;
@@ -200,7 +200,6 @@ public:
     }
 
     newptr = _memory.realloc (ptr, sz, _hasProtected);
-    //fprintf(stderr, "realloc ptr %p sz %x\n", newptr, sz);
     return newptr;
   }
 
@@ -232,9 +231,9 @@ public:
 
   // FIXME: if we are trying to remove atomicEnd() before mutex_sync(),
   // we should unlock() this lock if abort(), otherwise, it will
-  // cause the dead-lock().
+  // cause a deadlock.
+
   void mutex_lock(pthread_mutex_t * mutex) {
-    //fprintf(stderr, "%d : mutex lock\n", getpid());
     atomicEnd(true, true);
     _sync.mutex_lock(mutex);
     atomicBegin(false, false);
@@ -251,14 +250,12 @@ public:
     return 0;
   }
 
-
   int barrier_wait(pthread_barrier_t *barrier) {
     atomicEnd(true, true);
     _sync.barrier_wait(barrier);
     atomicBegin(true, false);
     return 0;
   }
-
 
   /// FIXME: whether we can using the order like this.
   void cond_wait(void * cond, void * lock) {
@@ -272,8 +269,7 @@ public:
       atomicEnd(false, true);
       _sync.cond_broadcast (cond);
       atomicBegin(false, false);
-    }
-    else {
+    } else {
       atomicEnd(true, true);
       _sync.cond_broadcast (cond);
       atomicBegin(true, false);
@@ -285,8 +281,7 @@ public:
       atomicEnd(false, true);
       _sync.cond_signal (cond);
       atomicBegin(false, false);
-    }
-    else {
+    } else {
       atomicEnd(true, true);
        _sync.cond_signal (cond);
       atomicBegin(true, false);
@@ -317,11 +312,10 @@ public:
 private:
 
 
-  xthread    _thread;
+  xthread	_thread;
+  xsync  	_sync;
 
-  xsync  _sync;
-
-  int _locks;
+  int 		_locks;
 
   /// The memory manager (for both heap and globals).
   xmemory&     _memory;
