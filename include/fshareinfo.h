@@ -35,15 +35,18 @@ the performance for the following cases:
    a. Long transactions.
    b. False sharing inside.
 
-To work as a runtime system, we want to be passive. That is, we only do protection when there is some benefit to do so. 
+To work as a runtime system, we want to be passive. That is, we only
+protect pages when there is some benefit to do so.
 
 1. Since we have to pay some overhead for transaction end and begin,
    which should be avoided as much as possible since the benefit of
    tolerating false sharing can be ''dixiao'' easily by the overhead
    of transaction overhead.
 
+   [EDB: Please translate 'dixiao' FIX ME.]
+
 2. When one page has been protected before, which we can't find some
-   benefit, we tend to un-protected this page forever even if there is
+   benefit, we tend to un-protect this page forever even if there is
    memory re-usage in this page.  So protection can happen only on one
    address once.
 
@@ -57,7 +60,7 @@ To work as a runtime system, we want to be passive. That is, we only do protecti
    protecting those new memory again. Then we can evaluate performance
    again later.
 
-   */
+*/
 
 #include "xdefines.h"
 #include "xplock.h"
@@ -72,8 +75,7 @@ public:
   fshareinfo()
   {
     // Allocate a shared page to hold all heap metadata.
-    char * base = (char *) mmap (NULL, xdefines::PageSize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  
+    char * base = (char *) allocateShared (xdefines::PageSize);
     _trans       = (int *)base;
     _interwrites = (int *)(base + 1 * sizeof(int));
     _events      = (int *)(base + 2 * sizeof(int));
@@ -95,8 +97,7 @@ public:
   virtual ~fshareinfo() {}
   
   static fshareinfo& getInstance() {
-    static void * buf = WRAP(mmap) (NULL, sizeof(fshareinfo), PROT_READ | PROT_WRITE, 
-				    MAP_SHARED | MAP_ANON, 0, 0);
+    static void * buf = allocateShared (sizeof(fshareinfo));
     static fshareinfo * theOneTrueObject = new (buf) fshareinfo();
     return *theOneTrueObject;
   }
@@ -109,7 +110,7 @@ public:
   }
 
   int getTrans() {
-    return (*_trans);
+    return *_trans;
   }
 
   int updateTrans() {
@@ -133,18 +134,28 @@ public:
   }
 
   int getCaches() {
-    return (*_caches);
+    return *_caches;
   }
 
   int getProtects() {
-    return (*_prots);
+    return *_prots;
   }
 
   int getDirtyPages() {
-    return (*_pages);
+    return *_pages;
   }
 
 private:
+
+  static void * allocateShared (size_t sz) {
+    return WRAP(mmap) (NULL,
+		       sizeof(fshareinfo),
+		       PROT_READ | PROT_WRITE, 
+		       MAP_SHARED | MAP_ANONYMOUS,
+		       -1,
+		       0);
+  }
+
   int * _trans;
   int * _interwrites;
   int * _events;
