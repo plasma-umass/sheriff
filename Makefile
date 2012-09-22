@@ -18,8 +18,6 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xrun.h         \
 	$(INCLUDE_DIR)/xsync.h        \
 	$(INCLUDE_DIR)/xtracker.h     \
-	$(INCLUDE_DIR)/callsite.h     \
-	$(INCLUDE_DIR)/finetime.h     \
 	$(INCLUDE_DIR)/fshareinfo.h   \
 	$(INCLUDE_DIR)/objectheader.h \
 	$(INCLUDE_DIR)/objecttable.h  \
@@ -29,7 +27,10 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/heap/warpheap.h     \
 	$(INCLUDE_DIR)/heap/internalheap.h \
 	$(INCLUDE_DIR)/heap/privateheap.h  \
-	$(INCLUDE_DIR)/heap/sourcesharedheap.h
+	$(INCLUDE_DIR)/heap/sourcesharedheap.h \
+	$(INCLUDE_DIR)/callsite.h     \
+	$(INCLUDE_DIR)/elfinfo.h     \
+	$(INCLUDE_DIR)/finetime.h     
 
 DEPS = $(SRCS) $(INCS)
 
