@@ -11,6 +11,7 @@ SRCS =  $(SOURCE_DIR)/libsheriff.cpp \
 INCS =  $(INCLUDE_DIR)/xpersist.h     \
         $(INCLUDE_DIR)/xdefines.h     \
 	$(INCLUDE_DIR)/xglobals.h     \
+	$(INCLUDE_DIR)/xmemory.h      \
 	$(INCLUDE_DIR)/xpageinfo.h    \
 	$(INCLUDE_DIR)/xpageprof.h    \
 	$(INCLUDE_DIR)/xpagestore.h   \
@@ -28,13 +29,13 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/heap/internalheap.h \
 	$(INCLUDE_DIR)/heap/privateheap.h  \
 	$(INCLUDE_DIR)/heap/sourcesharedheap.h \
-	$(INCLUDE_DIR)/callsite.h     \
-	$(INCLUDE_DIR)/elfinfo.h     \
-	$(INCLUDE_DIR)/finetime.h     
+	$(INCLUDE_DIR)/util/callsite.h     \
+	$(INCLUDE_DIR)/util/elfinfo.h     \
+	$(INCLUDE_DIR)/util/finetime.h     
 
 DEPS = $(SRCS) $(INCS)
 
-CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap
+CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util
 
 # Detection on 32bit
 # CXX = g++ -DSSE_SUPPORT -m32 -DX86_32BIT -O3 -fno-omit-frame-pointer -DDETECT_FALSE_SHARING
