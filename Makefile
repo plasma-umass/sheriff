@@ -9,10 +9,8 @@ SRCS =  $(SOURCE_DIR)/libsheriff.cpp \
 	$(SOURCE_DIR)/gnuwrapper.cpp
 
 INCS =  $(INCLUDE_DIR)/xpersist.h     \
-	$(INCLUDE_DIR)/xadaptheap.h   \
         $(INCLUDE_DIR)/xdefines.h     \
 	$(INCLUDE_DIR)/xglobals.h     \
-	$(INCLUDE_DIR)/xoneheap.h     \
 	$(INCLUDE_DIR)/xpageinfo.h    \
 	$(INCLUDE_DIR)/xpageprof.h    \
 	$(INCLUDE_DIR)/xpagestore.h   \
@@ -20,20 +18,22 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xrun.h         \
 	$(INCLUDE_DIR)/xsync.h        \
 	$(INCLUDE_DIR)/xtracker.h     \
-	$(INCLUDE_DIR)/warpheap.h     \
 	$(INCLUDE_DIR)/callsite.h     \
 	$(INCLUDE_DIR)/finetime.h     \
 	$(INCLUDE_DIR)/fshareinfo.h   \
-	$(INCLUDE_DIR)/internalheap.h \
 	$(INCLUDE_DIR)/objectheader.h \
 	$(INCLUDE_DIR)/objecttable.h  \
-	$(INCLUDE_DIR)/privateheap.h  \
 	$(INCLUDE_DIR)/realfuncs.h    \
-	$(INCLUDE_DIR)/sourcesharedheap.h
+	$(INCLUDE_DIR)/heap/xadaptheap.h   \
+	$(INCLUDE_DIR)/heap/xoneheap.h     \
+	$(INCLUDE_DIR)/heap/warpheap.h     \
+	$(INCLUDE_DIR)/heap/internalheap.h \
+	$(INCLUDE_DIR)/heap/privateheap.h  \
+	$(INCLUDE_DIR)/heap/sourcesharedheap.h
 
 DEPS = $(SRCS) $(INCS)
 
-CXX = g++ -g -I$(INCLUDE_DIR)
+CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap
 
 # Detection on 32bit
 # CXX = g++ -DSSE_SUPPORT -m32 -DX86_32BIT -O3 -fno-omit-frame-pointer -DDETECT_FALSE_SHARING
