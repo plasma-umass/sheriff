@@ -26,8 +26,8 @@
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */ 
 
-#ifndef _XMEMORY_H_
-#define _XMEMORY_H_
+#ifndef SHERIFF_XMEMORY_H
+#define SHERIFF_XMEMORY_H
 
 #include <signal.h>
 
@@ -67,25 +67,25 @@ class xmemory {
 private:
 
   // Private on purpose. See getInstance(), below.
-  xmemory (void) 
-  : _init(false),
-    _internalheap(InternalHeap::getInstance()),
-    _fshareinfo(fshareinfo::getInstance())
+  xmemory() 
+  : _init (false),
+    _internalheap (InternalHeap::getInstance()),
+    _fshareinfo   (fshareinfo::getInstance())
   {
-//    fprintf(stderr, "xmemory constructor\n");
   }
 
 public:
+
   // Just one accessor.  Why? We don't want more than one (singleton)
   // and we want access to it neatly encapsulated here, for use by the
   // signal handler.
-  static xmemory& getInstance (void) {
+  static xmemory& getInstance() {
     static char buf[sizeof(xmemory)];
     static xmemory * theOneTrueObject = new (buf) xmemory();
     return *theOneTrueObject;
   }
 
-  void initialize(void) {
+  void initialize() {
     // Intercept SEGV signals (used for trapping initial reads and
     // writes to pages).
     installSignalHandler();
@@ -110,17 +110,17 @@ public:
     _init = true;
   }
 
-  void setMainId(int tid) {
-    _maintid= tid;
+  void setMainId (int tid) {
+    _maintid = tid;
   }
 
-  void finalize(void) {
+  void finalize() {
     _globals.finalize(NULL);
-    _bheap.finalize(_bheap.getend());
+    _bheap.finalize (_bheap.getend());
   }
 
 
-  inline void *malloc(size_t sz, bool isProtected) {
+  inline void *malloc (size_t sz, bool isProtected) {
     void * ptr = NULL;
     bool   checkCallsite = false;
 
@@ -129,7 +129,7 @@ Remalloc_again:
   //fprintf(stderr, "xmemory malloc sz %d\n", sz);
   ptr = _bheap.malloc(_heapid, sz);
    
-  // Otherwise, there is a circle.
+  // Otherwise, there is a cycle.
   if(_init == true)
     checkCallsite = true;
 
@@ -140,9 +140,9 @@ Remalloc_again:
 
     callsite.fetch(2);
 
-    // Check whether current callsite is the same as before, 
-    // If it is not the same, we have to cleanup all information about old object to
-    // avoid false positives.
+    // Check whether current callsite is the same as before. If it is
+    // not the same, we have to cleanup all information about the old
+    // object to avoid false positives.
     if(isProtected && !obj->sameCallsite(&callsite)) {
       bool successCleanup;
 
@@ -157,8 +157,7 @@ Remalloc_again:
   #endif
       // Save the new callsite information.
       memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
-    }
-    else if(!isProtected) {
+    } else if (!isProtected) {
       // Save callsite to object header.
       memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
     }
@@ -177,16 +176,16 @@ Remalloc_again:
   }
 
 
-  inline void * realloc(void * ptr, size_t sz, bool isProtected) {
+  inline void * realloc (void * ptr, size_t sz, bool isProtected) {
     size_t s = getSize (ptr);
 
-    void * newptr =  malloc(sz, isProtected);
+    void * newptr =  malloc (sz, isProtected);
     if (newptr && s != 0) {
       size_t copySz = (s < sz) ? s : sz;
       memcpy (newptr, ptr, copySz);
     }
 
-    free(ptr);
+    free (ptr);
     return newptr;
   }
 
@@ -196,10 +195,11 @@ Remalloc_again:
 #ifdef DETECT_FALSE_SHARING
     _bheap.free(_heapid, ptr);
 #else
-    if(s <= xdefines::LARGE_CHUNK) 
+    if (s <= xdefines::LARGE_CHUNK) {
       _bheap.free(_heapid, ptr);
-    else
+    } else {
       _sheap.free(_heapid, ptr);
+    }
 #endif
   }
 
@@ -209,16 +209,16 @@ Remalloc_again:
     return _bheap.getSize (ptr);
   }
  
-  void openProtection(void) {
+  void openProtection() {
     _globals.openProtection();
     _bheap.openProtection();
     _protectLargeHeap = true;
     _protection = true;
   }
 
-  void closeProtection(void) {
+  void closeProtection() {
     // Only do it when the protection is set.
-    if(_protection) {
+    if (_protection) {
       // memory spaces (globals and heap).
       _globals.closeProtection();
       _bheap.closeProtection();
@@ -227,8 +227,7 @@ Remalloc_again:
     }
   }
 
-  inline int setThreadIndex(int heapid) {
-    //fprintf(stderr, "%d: setheapid %d\n", getpid(), heapid);
+  inline int setThreadIndex (int heapid) {
     _heapid = heapid%xdefines::NUM_HEAPS;
     _bheap.setHeapId(heapid%xdefines::NUM_HEAPS);
   }
@@ -242,12 +241,12 @@ Remalloc_again:
       startCheckingTimer(true);
     }
 #else
-    if(_protection) {
+    if (_protection) {
       // Reset global and heap protection.
       _globals.begin();
       _bheap.begin();
     }
-    if(startThread) {
+    if (startThread) {
       _lasttrans = _fshareinfo.getTrans();
       start(&_lasttime);
     }
@@ -258,26 +257,28 @@ Remalloc_again:
   inline void handleWrite (void * addr) {
     if (_bheap.inRange (addr)) {
       _bheap.handleWrite (addr);
-      return;
-    }
-    else if (_globals.inRange (addr)) {
+    } else if (_globals.inRange (addr)) {
       _globals.handleWrite (addr);
-      return;
+    } else {
+      // Something must be wrong here.
+      fprintf(stderr, "address %p is out of range!\n", addr);
     }
-
-    // Something must be wrong here.
-    fprintf(stderr, "address %p is out of range!\n", addr);
   }
   
 
-  // How to disable protection periodically for large objects. 
-  // Since there are two cases in those benchmarks:
-  //  One type: fluidanimate, transaction is short, then we may not have much checking times.
-  //          For this type, we may check the transaction times in order to close protection. In fact,
-  //          We may close system call to set timers.
-  //  Another type: canneal, transaction is long, but checking should take a long time because of large working set.
-  //          For this type, we maybe should check the checking times.
-  // So totally, it would be good to check the times of checking times and transaction times. 
+  // EDB: This comment needs to be rewritten for clarity.
+
+  // How to disable protection periodically for large objects.  Since
+  // there are two cases in those benchmarks: One type: fluidanimate,
+  // transaction is short, then we may not have much checking times.
+  // For this type, we may check the transaction times in order to
+  // close protection. In fact, We may close system call to set
+  // timers.  Another type: canneal, transaction is long, but checking
+  // should take a long time because of large working set.  For this
+  // type, we maybe should check the checking times.  So totally, it
+  // would be good to check the times of checking times and
+  // transaction times.
+
   inline void commit (bool doChecking, bool update) {
 #ifdef DETECT_FALSE_SHARING
     stopCheckingTimer();
@@ -297,22 +298,22 @@ Remalloc_again:
 #endif
 } 
 
-  inline int getElapsedMs(void) {
+  inline int getElapsedMs() {
     return (elapsed2ms(stop(&_lasttime, NULL)));
   }
 
-  // We are using the "exponential moving average" here.
-  // We are using 0.9 as the exponential. 
-  inline double getAverage(unsigned long elapse, int trans) {
+  // We are using an exponential weighted moving average here, with
+  // alpha set to 0.9.
+  inline double getAverage (unsigned long elapsed, int trans) {
     double value = 0;
     if(trans > 0) {
-      value = 0.9*(double)elapse/(double)trans + 0.1*(double)_lastema;
+      value = 0.9*(double)elapsed/(double)trans + 0.1*(double)_lastema;
     }
     return value;
   }
 
 #ifndef DETECT_FALSE_SHARING // For Sheriff-Protect only
-  void evaluateProtection(bool update) {
+  void evaluateProtection (bool update) {
     int trans;
     unsigned long elapse = 0;
 
@@ -425,13 +426,13 @@ Remalloc_again:
   }
 
   /// @brief Disable checking timer
-  inline void stopCheckingTimer(void) {
+  inline void stopCheckingTimer() {
     if(_timerStarted)
       ualarm(0, 0);
   } 
  
   // Save some time to set the timer. TONGPING 
-  inline void startCheckingTimer(bool evaluate) {
+  inline void startCheckingTimer (bool evaluate) {
   
     // Check whether we actually need to start checking timer.
     // When the transaction is too short, we don't need to start the 
@@ -458,15 +459,15 @@ Remalloc_again:
     }
   }
 
-  inline void enableCheck(void) {
+  inline void enableCheck() {
     xatomic::atomic_set(&_doChecking, 1);
   }
 
-  inline void disableCheck(void) {
+  inline void disableCheck() {
     xatomic::atomic_set(&_doChecking, 0);
   } 
 
-  void doPeriodicChecking (void) {
+  void doPeriodicChecking () {
     if(_doChecking == 1) {
       stopCheckingTimer();
       _globals.periodicCheck();
@@ -508,10 +509,9 @@ public:
 
   /// @brief Signal handler to trap SEGVs.
   static void segvHandle (int signum,
-          siginfo_t * siginfo,
-          void * context) 
+			  siginfo_t * siginfo,
+			  void * context) 
   {
-  //fprintf(stderr, "%d: page fault handler\n", getpid());
 #ifdef DETECT_FALSE_SHARING
     xmemory::getInstance().disableCheck();
 #endif
@@ -544,16 +544,15 @@ public:
   }
 
   /// @brief Handle those timers about checking.
-  static void checkingTimerHandle(int signum,
-              siginfo_t * siginfo,
-              void * context) 
+  static void checkingTimerHandle (int signum,
+				   siginfo_t * siginfo,
+				   void * context) 
   {
     xmemory::getInstance().doPeriodicChecking();
-    return;
   }
 
-  /// @brief Install a handler for SEGV signals.
-  void installSignalHandler (void) {
+  /// @brief Install a handler for SEGV signals.
+  void installSignalHandler() {
 #if defined(linux)
     // Set up an alternate signal stack.
     _sigstk.ss_sp = mmap (NULL, SIGSTKSZ, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -580,14 +579,14 @@ public:
 
     siga.sa_sigaction = xmemory::segvHandle;
     if (sigaction (SIGSEGV, &siga, NULL) == -1) {
-      printf ("sfug.\n");
+      fprintf (stderr, "Signal handler for SIGSEGV failed to install.\n");
       exit (-1);
     }
 
-    // We use the alarmer to trigger checking timer.
+    // We use the alarm to trigger checking timer.
     siga.sa_sigaction = xmemory::checkingTimerHandle;
     if (sigaction (SIGALRM, &siga, NULL) == -1) {
-      printf ("sigalrm.\n");
+      fprintf (stderr, "Signal handler for SIGALRM failed to install.\n");
       exit (-1);
     }
 
@@ -596,7 +595,8 @@ public:
 
 private:
 
-  /// The protected heap used to satisfy big objects requirement. Less than 256 bytes now.
+  /// The protected heap used to satisfy big objects requirement. Less
+  /// than 256 bytes now.
   warpheap<xdefines::NUM_HEAPS, xdefines::PROTECTEDHEAP_CHUNK, xoneheap<xheap<xdefines::PROTECTEDHEAP_SIZE> > > _bheap;
   
   /// The globals region.
@@ -607,7 +607,7 @@ private:
 #endif
 
   typedef std::set<void *, less<void *>,
-       HL::STLAllocator<void *, privateheap> > // myHeap> >
+		   HL::STLAllocator<void *, privateheap> > // myHeap> >
   pagesetType;
 
   int _heapid;
