@@ -37,22 +37,24 @@
 class CallSite {
 public:
   CallSite() {
-    for(int i = 0; i < CALL_SITE_DEPTH; i++) {
+    for (int i = 0; i < CALL_SITE_DEPTH; i++) {
       _callsite[i] = 0;
     }
   }
 
   unsigned long get_item(unsigned int index)
   {
-    return (_callsite[index]);
+    assert (index < CALL_SITE_DEPTH);
+    return _callsite[index];
   }
 
-  unsigned long get_depth(void) 
+  unsigned long get_depth() 
   {
     return CALL_SITE_DEPTH;
   }
 
-  void print(void) {
+  void print()
+  {
     printf("CALL SITE: ");
     for(int i = 0; i < CALL_SITE_DEPTH; i++) {
       printf("%lx\t", _callsite[i]);
@@ -158,4 +160,4 @@ public:
   unsigned long _callsite[CALL_SITE_DEPTH];
 };
 
-#endif /* __CALLSITE_H__ */
+#endif
