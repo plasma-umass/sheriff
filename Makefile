@@ -16,11 +16,12 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xpageprof.h    \
 	$(INCLUDE_DIR)/xpagestore.h   \
 	$(INCLUDE_DIR)/xrun.h         \
-	$(INCLUDE_DIR)/xtracker.h     \
-	$(INCLUDE_DIR)/stats.h        \
 	$(INCLUDE_DIR)/objectheader.h \
 	$(INCLUDE_DIR)/objecttable.h  \
 	$(INCLUDE_DIR)/realfuncs.h    \
+	$(INCLUDE_DIR)/detect/stats.h \
+	$(INCLUDE_DIR)/detect/xheapcleanup.h \
+	$(INCLUDE_DIR)/detect/xtracker.h   \
 	$(INCLUDE_DIR)/heap/xadaptheap.h   \
 	$(INCLUDE_DIR)/heap/xoneheap.h     \
 	$(INCLUDE_DIR)/heap/warpheap.h     \
@@ -37,7 +38,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 
 DEPS = $(SRCS) $(INCS)
 
-CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util -I$(INCLUDE_DIR)/sync
+CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/detect -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util -I$(INCLUDE_DIR)/sync
 
 # Detection on 32bit
 # CXX = g++ -DSSE_SUPPORT -m32 -DX86_32BIT -O3 -fno-omit-frame-pointer -DDETECT_FALSE_SHARING
