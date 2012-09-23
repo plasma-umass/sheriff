@@ -53,11 +53,6 @@ extern "C"
 
   enum { CHECK_AGAIN_UNDER_PROTECTION = 1 };
 
-  struct wordchangeinfo {
-    unsigned short tid;
-    unsigned short version;
-  };
-
   enum { CALL_SITE_DEPTH = 2 };
 
 #ifdef GET_CHARACTERISTICS

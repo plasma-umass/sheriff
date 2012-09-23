@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _XTRACKER_H_
-#define _XTRACKER_H_
+#ifndef SHERIFF_XTRACKER_H
+#define SHERIFF_XTRACKER_H
 
 #include <set>
 
@@ -18,6 +18,7 @@
 #include <errno.h>
 
 #include "mm.h"
+#include "wordchangeinfo.h"
 #include "objectinfo.h"
 #include "objecttable.h"
 #include "objectheader.h"
@@ -319,9 +320,9 @@ public:
     return obj;
   }
 
-  int calcCacheWrites(struct wordchangeinfo * start, int count) {
-    struct wordchangeinfo * cur = start;
-    struct wordchangeinfo * stop = &start[count];
+  int calcCacheWrites(wordchangeinfo * start, int count) {
+    wordchangeinfo * cur = start;
+    wordchangeinfo * stop = &start[count];
     int    writes = 0;
     
     while(cur < stop) {
@@ -333,7 +334,7 @@ public:
   }
 
   // It is simple for us, we just use the forward search.
-  void checkWrites(int * base, int size, struct wordchangeinfo * wordchange) {
+  void checkWrites(int * base, int size, wordchangeinfo * wordchange) {
     int * pos;
     int * end;
   
@@ -413,11 +414,11 @@ public:
     return address;
   }
 
-  int getObjectWrites(int * start, int * stop, int * memstart, struct wordchangeinfo * wordchange) {
+  int getObjectWrites(int * start, int * stop, int * memstart, wordchangeinfo * wordchange) {
     int offset;
     offset = ((intptr_t)start - (intptr_t)memstart)/sizeof(unsigned long);
       
-    struct wordchangeinfo * cur = &wordchange[offset];
+    wordchangeinfo * cur = &wordchange[offset];
     int    writes = 0;
     int * pos = start;
   
@@ -431,7 +432,7 @@ public:
     return writes;
   }
 
-  int getAccessThreads(unsigned long * start, int unitsize, struct wordchangeinfo * cur) {
+  int getAccessThreads(unsigned long * start, int unitsize, wordchangeinfo * cur) {
     int   offset;
     int   threads = 1;
     int   threadid = cur->tid;
@@ -464,7 +465,7 @@ public:
   }
 
 
-  void checkHeapObjects(unsigned long * cacheInvalidates, int * memstart, int * memend, struct wordchangeinfo * wordchange) {
+  void checkHeapObjects(unsigned long * cacheInvalidates, int * memstart, int * memend, wordchangeinfo * wordchange) {
     int i;
   
     int * pos = memstart;
@@ -518,12 +519,12 @@ public:
           objectinfo.start = (unsigned long *)&object[1];
           objectinfo.stop = (unsigned long *)nextobject;
           objectinfo.wordchange_start = &wordchange[objectOffset/sizeof(unsigned long)];
-          objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
+          objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
           
           memcpy((void *)&objectinfo.callsite, (void *) &(object->getCallsiteRef()), object->getCallsiteLength());
           
           // Check the first object for share type.
-          objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (struct wordchangeinfo *)objectinfo.wordchange_start);
+          objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (wordchangeinfo *)objectinfo.wordchange_start);
           ObjectTable::getInstance().insertObject(objectinfo);        
         }
           pos = (int *)nextobject;
@@ -540,7 +541,7 @@ public:
     return ((start & xdefines::CACHELINE_SIZE_MASK) + size + xdefines::CACHE_LINE_SIZE - 1)/xdefines::CACHE_LINE_SIZE;
   }
 
-  void checkGlobalObjects(unsigned long *cacheInvalidates, int * memBase, int size, struct wordchangeinfo * wordchange) {
+  void checkGlobalObjects(unsigned long *cacheInvalidates, int * memBase, int size, wordchangeinfo * wordchange) {
     struct elf_info *elf = &_elf_info;  
     Elf_Ehdr *hdr = elf->hdr;
     Elf_Sym *symbol;
@@ -581,10 +582,10 @@ public:
         objectinfo.start = (unsigned long *)objectStart;
         objectinfo.stop = (unsigned long *)(objectStart + objectSize);
         objectinfo.wordchange_start = &wordchange[objectOffset/sizeof(unsigned long)];
-        objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
+        objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
 
         // Check the first object for share type.
-        objectinfo.access_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (struct wordchangeinfo *)objectinfo.wordchange_start);
+        objectinfo.access_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (wordchangeinfo *)objectinfo.wordchange_start);
         ObjectTable::getInstance().insertObject(objectinfo);
       }
     }

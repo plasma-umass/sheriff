@@ -14,6 +14,7 @@
 #endif
 
 #include "mm.h"
+#include "wordchangeinfo.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -177,8 +178,8 @@ public:
       MM::allocateShared (TotalCacheNums * sizeof(unsigned long));
 
     // FIXME: Didn't make sense to have this since most pages are not shared.
-    _wordChanges = (struct wordchangeinfo *)
-      MM::allocateShared (TotalWordNums * sizeof(struct wordchangeinfo));
+    _wordChanges = (wordchangeinfo *)
+      MM::allocateShared (TotalWordNums * sizeof(wordchangeinfo));
 
     if ((_transientMemory == MAP_FAILED) ||
 	(_globalSharedInfo == MAP_FAILED) ||
@@ -262,7 +263,7 @@ public:
     unsigned long * start = (unsigned long *)((unsigned long)base() + offset);
   
     for(int i = 0; i < 16; i++) {
-      struct wordchangeinfo * word = &_wordChanges[offset/sizeof(unsigned long) + i];
+      wordchangeinfo * word = &_wordChanges[offset/sizeof(unsigned long) + i];
       fprintf(stderr, "addr %p - %x with changes %d times by thread %d\n", &start[i], start[i], word->version, word->tid);
     }
   }
@@ -735,7 +736,7 @@ public:
   }
 
   inline void recordWordChanges(void * addr, unsigned long changes) {
-    struct wordchangeinfo * word = (struct wordchangeinfo *)addr;
+    wordchangeinfo * word = (wordchangeinfo *)addr;
     unsigned short tid = word->tid;
   
     int mine = getpid();
@@ -1132,7 +1133,7 @@ private:
   
   // In order to save space, we will use the higher 16 bit to store the thread id
   // and use the lower 16 bit to store versions.
-  struct wordchangeinfo * _wordChanges;
+  wordchangeinfo * _wordChanges;
 
   bool _detectPeriod;
  
