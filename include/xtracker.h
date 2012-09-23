@@ -20,7 +20,7 @@
 #include "objecttable.h"
 #include "objectheader.h"
 #include "elfinfo.h"
-#include "fshareinfo.h"
+#include "stats.h"
 
 template <int NElts = 1>
 class xtracker {
@@ -363,7 +363,7 @@ public:
       } 
   #ifdef GET_CHARACTERISTICS
       if(cacheInvalidates[cacheStart + i] > 1) { 
-        fshareinfo::getInstance().updateCaches();
+        stats::getInstance().updateCaches();
       }
   #endif
     }

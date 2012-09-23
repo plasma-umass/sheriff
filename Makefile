@@ -19,7 +19,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xrun.h         \
 	$(INCLUDE_DIR)/xsync.h        \
 	$(INCLUDE_DIR)/xtracker.h     \
-	$(INCLUDE_DIR)/fshareinfo.h   \
+	$(INCLUDE_DIR)/stats.h        \
 	$(INCLUDE_DIR)/objectheader.h \
 	$(INCLUDE_DIR)/objecttable.h  \
 	$(INCLUDE_DIR)/realfuncs.h    \

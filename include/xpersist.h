@@ -38,7 +38,7 @@
 #ifdef DETECT_FALSE_SHARING
 #include "xtracker.h"
 #include "xheapcleanup.h"
-#include "fshareinfo.h"
+#include "stats.h"
 #endif
 
 #if defined(sun)
@@ -286,7 +286,7 @@ public:
 #ifdef GET_CHARACTERISTICS
   fprintf(stderr, "\n\n Statistics information at heap: %d\n", _isHeap);
   fprintf(stderr, "trans %d, dirtypages %d, protects %d, cachelines %d\n", 
-  fshareinfo::getInstance().getTrans(), fshareinfo::getInstance().getDirtyPages(), fshareinfo::getInstance().getProtects(), fshareinfo::getInstance().getCaches());
+  stats::getInstance().getTrans(), stats::getInstance().getDirtyPages(), stats::getInstance().getProtects(), stats::getInstance().getCaches());
 #endif
 #endif
   }
@@ -914,7 +914,7 @@ public:
     #ifdef DETECT_FALSE_SHARING
       if(_localSharedInfo[pageNo] == true && pageinfo->hasTwinPage == true) {
       #ifdef GET_CHARACTERISTICS
-        fshareinfo::getInstance().updateDirtyPage();
+        stats::getInstance().updateDirtyPage();
       #endif
 
         // We have to do slower checking in order to commit all information to the global changes.
@@ -934,7 +934,7 @@ public:
           // Change the mapping to Readonly and MAP_PRIVATE.
           _localSharedInfo[pageNo] = true;  
         #ifdef GET_CHARACTERISTICS
-          fshareinfo::getInstance().updateProtects();
+          stats::getInstance().updateProtects();
         #endif
           pagetype = PAGE_TYPE_PRIVATE;
         }

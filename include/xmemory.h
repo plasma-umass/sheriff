@@ -60,7 +60,7 @@
 #include "objectheader.h"
 #include "xheapcleanup.h"
 
-#include "fshareinfo.h"
+#include "stats.h"
 #include "finetime.h"
 
 class xmemory {
@@ -70,7 +70,7 @@ private:
   xmemory() 
   : _init (false),
     _internalheap (InternalHeap::getInstance()),
-    _fshareinfo   (fshareinfo::getInstance())
+    _stats   (stats::getInstance())
   {
   }
 
@@ -247,7 +247,7 @@ Remalloc_again:
       _bheap.begin();
     }
     if (startThread) {
-      _lasttrans = _fshareinfo.getTrans();
+      _lasttrans = _stats.getTrans();
       start(&_lasttime);
     }
 #endif
@@ -289,7 +289,7 @@ Remalloc_again:
     _globals.commit(doChecking);
   
     // Update the transaction number.
-    _fshareinfo.updateTrans();
+    _stats.updateTrans();
 
 #ifdef DETECT_FALSE_SHARING
     evaluateProtection(update, true);
@@ -318,11 +318,11 @@ Remalloc_again:
     unsigned long elapse = 0;
 
     if(update) {
-      trans = _fshareinfo.updateTrans();
+      trans = _stats.updateTrans();
       trans++;
     }
     else {
-      trans = _fshareinfo.getTrans();
+      trans = _stats.getTrans();
     }
 
     // Check for the transaction length
@@ -376,7 +376,7 @@ Remalloc_again:
      return;
   
     // We need to update the global events first and get the total events number.
-    int events = _fshareinfo.updateEvents();
+    int events = _stats.updateEvents();
   
     if(!isCommit) {
       return;
@@ -443,7 +443,7 @@ Remalloc_again:
       return;
     }
  
-    int trans = _fshareinfo.getTrans();
+    int trans = _stats.getTrans();
  
     if(trans%xdefines::EVAL_CHECKING_PERIOD == 0 && trans > xdefines::EVAL_CHECKING_PERIOD) {
       evalCheckingTimer(trans);     
@@ -627,7 +627,7 @@ private:
   /// A lock that protect the global area.
   int   _maintid;
 
-  fshareinfo &     _fshareinfo;
+  stats &     _stats;
   // Do we allow the checking.
   bool _timerStarted;
   unsigned long _doChecking;
