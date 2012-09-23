@@ -153,7 +153,7 @@ Remalloc_again:
         goto Remalloc_again;
       }
   #ifdef GET_CHARACTERISTICS
-      xatomic::add(sz, (unsigned long *)&cleanupSize);
+      atomic::add(sz, (unsigned long *)&cleanupSize);
   #endif
       // Save the new callsite information.
       memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
@@ -162,7 +162,7 @@ Remalloc_again:
       memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
     }
   #ifdef GET_CHARACTERISTICS
-    xatomic::increment((unsigned long *)&allocTimes);
+    atomic::increment((unsigned long *)&allocTimes);
   #endif
   }
 #else
@@ -460,11 +460,11 @@ Remalloc_again:
   }
 
   inline void enableCheck() {
-    xatomic::atomic_set(&_doChecking, 1);
+    atomic::atomic_set(&_doChecking, 1);
   }
 
   inline void disableCheck() {
-    xatomic::atomic_set(&_doChecking, 0);
+    atomic::atomic_set(&_doChecking, 0);
   } 
 
   void doPeriodicChecking () {

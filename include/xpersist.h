@@ -19,7 +19,7 @@
 #include <string.h>
 #include <xmmintrin.h>
 
-#include "xatomic.h"
+#include "atomic.h"
 #include "ansiwrapper.h"
 #include "freelistheap.h"
 
@@ -554,7 +554,7 @@ public:
     }
 #endif
     // We will update the users of this page.
-    origUsers = xatomic::increment_and_return(&_pageUsers[pageNo]);
+    origUsers = atomic::increment_and_return(&_pageUsers[pageNo]);
     if(origUsers != 0) {
       curr->shared = true;
     }
@@ -587,7 +587,7 @@ public:
       pageNo = pageinfo->pageNo;
       if(pageinfo->shared != true) {
         // Check whether one un-shared page becomes shared now?
-        int curUsers = xatomic::atomic_read(&_pageUsers[pageNo]);
+        int curUsers = atomic::atomic_read(&_pageUsers[pageNo]);
         if(curUsers == 1) {
           // We don't care those un-shared page.
           continue;
@@ -628,13 +628,13 @@ public:
     int interleaving = 0;
 
     // Try to check the global array about cache last thread id.
-    lastTid = xatomic::exchange(&_cacheLastthread[cacheNo], myTid);
+    lastTid = atomic::exchange(&_cacheLastthread[cacheNo], myTid);
 
     //fprintf(stderr, "Record cache interleavings, lastTid %d and myTid %d\n", lastTid, myTid);
     if(lastTid != 0 && lastTid != myTid) {
       // If the last thread to invalidate cache is not current thread, then we will update global
       // counter about invalidate numbers.
-      xatomic::increment(&_cacheInvalidates[cacheNo]);
+      atomic::increment(&_cacheInvalidates[cacheNo]);
      // fprintf(stderr, "Record cache invalidates %p with interleavings %d\n", &_cacheInvalidates[cacheNo], _cacheInvalidates[cacheNo]);
       interleaving = 1;
     }
@@ -965,7 +965,7 @@ public:
       // It is safer to commit the changes only. Memcpy can compromise the changes by the thread directly working on that.
       writePageDiffs(pageinfo->pageStart, pageinfo->origTwinPage, persistent);
     #endif
-      xatomic::decrement(&_pageUsers[pageinfo->pageNo]);
+      atomic::decrement(&_pageUsers[pageinfo->pageNo]);
     }
 
   #ifdef DETECT_FALSE_SHARING
@@ -1100,7 +1100,7 @@ public:
 
   /// @brief Commit all writes.
   inline void memoryBarrier (void) {
-    xatomic::memoryBarrier();
+    atomic::memoryBarrier();
   }
 
 private:

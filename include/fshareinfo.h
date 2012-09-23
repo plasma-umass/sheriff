@@ -106,7 +106,7 @@ public:
   // finished.  So it is possible that we will have multiple
   // interleaving invalidates in one page.
   void updateInvalidates(void * addr, int num) {
-    xatomic::add(num, (volatile unsigned long *)_interwrites);
+    atomic::add(num, (volatile unsigned long *)_interwrites);
   }
 
   int getTrans() {
@@ -114,23 +114,23 @@ public:
   }
 
   int updateTrans() {
-    return xatomic::increment_and_return((volatile unsigned long *)_trans);
+    return atomic::increment_and_return((volatile unsigned long *)_trans);
   }
 
   int updateEvents() {
-    return xatomic::increment_and_return((volatile unsigned long *)_events);
+    return atomic::increment_and_return((volatile unsigned long *)_events);
   }
 
   int updateCaches() {
-    return xatomic::increment_and_return((volatile unsigned long *)_caches);
+    return atomic::increment_and_return((volatile unsigned long *)_caches);
   }
 
  int updateDirtyPage() {
-    return xatomic::increment_and_return((volatile unsigned long *)_pages);
+    return atomic::increment_and_return((volatile unsigned long *)_pages);
   }
 
   int updateProtects() {
-    return xatomic::increment_and_return((volatile unsigned long *)_prots);
+    return atomic::increment_and_return((volatile unsigned long *)_prots);
   }
 
   int getCaches() {

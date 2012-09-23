@@ -45,7 +45,7 @@
 #include "xsync.h"
 
 // Grace utilities
-#include "xatomic.h"
+#include "atomic.h"
 
 class xrun {
 
@@ -116,7 +116,7 @@ public:
   inline void threadRegister (void) {
     int threadindex;
       
-    threadindex = xatomic::increment_and_return(global_thread_index);
+    threadindex = atomic::increment_and_return(global_thread_index);
  
     // Since we are a new thread, we need to use the new heap.
     _memory.setThreadIndex(threadindex+1);
