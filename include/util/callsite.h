@@ -82,7 +82,7 @@ public:
 #else
   // Check and store callsite
   inline void storeCallsite(unsigned long tmp, unsigned long * frames) {
-    if(tmp > textStart && tmp < textEnd) {
+    if ((tmp > textStart) && (tmp < textEnd)) {
       _callsite[*frames] = tmp-5;
       (*frames)++;
     }
