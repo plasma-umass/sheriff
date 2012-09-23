@@ -15,9 +15,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xpageinfo.h    \
 	$(INCLUDE_DIR)/xpageprof.h    \
 	$(INCLUDE_DIR)/xpagestore.h   \
-	$(INCLUDE_DIR)/xplock.h       \
 	$(INCLUDE_DIR)/xrun.h         \
-	$(INCLUDE_DIR)/xsync.h        \
 	$(INCLUDE_DIR)/xtracker.h     \
 	$(INCLUDE_DIR)/stats.h        \
 	$(INCLUDE_DIR)/objectheader.h \
@@ -29,6 +27,8 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/heap/internalheap.h \
 	$(INCLUDE_DIR)/heap/privateheap.h  \
 	$(INCLUDE_DIR)/heap/sourcesharedheap.h \
+	$(INCLUDE_DIR)/sync/xplock.h  \
+	$(INCLUDE_DIR)/sync/xsync.h   \
 	$(INCLUDE_DIR)/util/atomic.h       \
 	$(INCLUDE_DIR)/util/callsite.h     \
 	$(INCLUDE_DIR)/util/elfinfo.h      \
@@ -37,7 +37,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 
 DEPS = $(SRCS) $(INCS)
 
-CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util
+CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util -I$(INCLUDE_DIR)/sync
 
 # Detection on 32bit
 # CXX = g++ -DSSE_SUPPORT -m32 -DX86_32BIT -O3 -fno-omit-frame-pointer -DDETECT_FALSE_SHARING
