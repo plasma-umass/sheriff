@@ -45,7 +45,6 @@ public:
 
   /// @brief Initialize the lock.
   inline pthread_mutex_t * mutex_init(pthread_mutex_t * lck, bool needProtect) {
-    int result; 
     pthread_mutex_t * realMutex = NULL;
 
     if(needProtect) {
@@ -84,7 +83,7 @@ public:
   }
   
   /// @brief Destroy the lock.
-  inline int mutex_destroy (pthread_mutex_t * lck) {
+  inline void mutex_destroy (pthread_mutex_t * lck) {
     deallocSyncEntry(lck);
   }
 
