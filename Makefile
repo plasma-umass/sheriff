@@ -30,8 +30,9 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/heap/privateheap.h  \
 	$(INCLUDE_DIR)/heap/sourcesharedheap.h \
 	$(INCLUDE_DIR)/util/callsite.h     \
-	$(INCLUDE_DIR)/util/elfinfo.h     \
-	$(INCLUDE_DIR)/util/finetime.h     
+	$(INCLUDE_DIR)/util/elfinfo.h      \
+	$(INCLUDE_DIR)/util/finetime.h     \
+	$(INCLUDE_DIR)/util/mm.h
 
 DEPS = $(SRCS) $(INCS)
 
