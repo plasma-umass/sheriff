@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 /*
   Copyright (C) 2011 University of Massachusetts Amherst.
 
@@ -23,8 +25,8 @@
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */ 
     
-#ifndef __CALLSITE_H__
-#define __CALLSITE_H__
+#ifndef SHERIFF_CALLSITE_H
+#define SHERIFF_CALLSITE_H
 
 #include <link.h>
 #include <stdio.h>
@@ -34,126 +36,126 @@
 
 class CallSite {
 public:
-	CallSite() {
-		for(int i = 0; i < CALL_SITE_DEPTH; i++) {
-			_callsite[i] = 0;
-		}
-	}
+  CallSite() {
+    for(int i = 0; i < CALL_SITE_DEPTH; i++) {
+      _callsite[i] = 0;
+    }
+  }
 
-	unsigned long get_item(unsigned int index)
-	{
-		return (_callsite[index]);
-	}
+  unsigned long get_item(unsigned int index)
+  {
+    return (_callsite[index]);
+  }
 
-	unsigned long get_depth(void) 
-	{
-		return CALL_SITE_DEPTH;
-	}
+  unsigned long get_depth(void) 
+  {
+    return CALL_SITE_DEPTH;
+  }
 
-	void print(void) {
-		printf("CALL SITE: ");
-		for(int i = 0; i < CALL_SITE_DEPTH; i++) {
-			printf("%lx\t", _callsite[i]);
-		}
-		printf("\n");
-	}
+  void print(void) {
+    printf("CALL SITE: ");
+    for(int i = 0; i < CALL_SITE_DEPTH; i++) {
+      printf("%lx\t", _callsite[i]);
+    }
+    printf("\n");
+  }
 
 #if 0
   unsigned short fetch(int skip) {
     void * length[10];
     
-//    fprintf(stderr, "fetch : before backtrace total %d\n", skip+CALL_SITE_DEPTH);
+    //    fprintf(stderr, "fetch : before backtrace total %d\n", skip+CALL_SITE_DEPTH);
     int frames = backtrace((void **)&length[0], skip+CALL_SITE_DEPTH);
-//    fprintf(stderr, "fetch : after backtrace with frames %d\n", frames);
+    //    fprintf(stderr, "fetch : after backtrace with frames %d\n", frames);
 
     int minframes = (skip+CALL_SITE_DEPTH) > frames ? frames : (skip+CALL_SITE_DEPTH);
 
 #if 0
     int i;
     for(i = skip; i < minframes; i++) {
-		  _callsite[i-skip] = (unsigned long)length[i];
+      _callsite[i-skip] = (unsigned long)length[i];
       fprintf(stderr, "%d: %p at callsite %p\n", i, length[i], &_callsite[i]);
     }
 #endif
   }
   
 #else
-	// Check and store callsite
-	inline void storeCallsite(unsigned long tmp, unsigned long * frames) {
-		if(tmp > textStart && tmp < textEnd) {
-			_callsite[*frames] = tmp-5;
-			(*frames)++;
-		}
-	}
+  // Check and store callsite
+  inline void storeCallsite(unsigned long tmp, unsigned long * frames) {
+    if(tmp > textStart && tmp < textEnd) {
+      _callsite[*frames] = tmp-5;
+      (*frames)++;
+    }
+  }
 
-	/// The following function is borrowed from plug project that is written by Gene Nowark.
-	unsigned short fetch(int skip) 
-	{  
-		sigjmp_buf __backtrace_jump;
+  /// The following function is borrowed from plug project that is written by Gene Nowark.
+  unsigned short fetch(int skip) 
+  {  
+    sigjmp_buf __backtrace_jump;
 #ifdef X86_32BIT 
-#define RA(a) \
-		__builtin_frame_address(a) ? /*fprintf(stderr,"%d: 0x%x\n", a, __builtin_return_address(a)),*/ (unsigned long)__builtin_return_address(a) : 0UL;
+#define RA(a)								\
+    __builtin_frame_address(a) ? /*fprintf(stderr,"%d: 0x%x\n", a, __builtin_return_address(a)),*/ (unsigned long)__builtin_return_address(a) : 0UL;
 #else 
-   // On 64bit machine, we can use -O0 for application and sheriff, 
-   // but some library (glibc) may use other different optimization level, 
-   // which makes it unable to get callsite. 
-   // For example, __bultin_frame_adress(a) can return "5", in this case,
-   // we have to stop to get callsite information otherwise the program can crash.
-#define RA(a) \
-		((unsigned long)__builtin_frame_address(a) > 0x7fffff000 && (unsigned long)__builtin_frame_address(a) < 0x7fffffffffff)  ? /*fprintf(stderr,"%d: 0x%x\n", a, __builtin_return_address(a)),*/ (unsigned long)__builtin_return_address(a) : 0UL;
+    // On 64bit machine, we can use -O0 for application and sheriff, 
+    // but some library (glibc) may use other different optimization level, 
+    // which makes it unable to get callsite. 
+    // For example, __bultin_frame_adress(a) can return "5", in this case,
+    // we have to stop to get callsite information otherwise the program can crash.
+#define RA(a)								\
+    ((unsigned long)__builtin_frame_address(a) > 0x7fffff000 && (unsigned long)__builtin_frame_address(a) < 0x7fffffffffff)  ? /*fprintf(stderr,"%d: 0x%x\n", a, __builtin_return_address(a)),*/ (unsigned long)__builtin_return_address(a) : 0UL;
 #endif 
 
 
-#define STORE_CALLSITE_AND_CHECK_EXIT \
-		if(tmp == 0) break; \
-		storeCallsite(tmp, &frames); \
-		if(frames == CALL_SITE_DEPTH) break;  
+#define STORE_CALLSITE_AND_CHECK_EXIT		\
+    if(tmp == 0) break;				\
+    storeCallsite(tmp, &frames);		\
+    if(frames == CALL_SITE_DEPTH) break;  
 
-		unsigned long tmp;
-		unsigned long frames = 0;
+    unsigned long tmp;
+    unsigned long frames = 0;
 	
     //while(1) ;	
     // setjmp should be OK here because SEGV can't be masked.
-		// And sigsetjmp requires a kernel crossing and is fscking expensive in any case.
-		if(setjmp(__backtrace_jump) == 0) {
+    // And sigsetjmp requires a kernel crossing and is fscking expensive in any case.
+    if(setjmp(__backtrace_jump) == 0) {
     
-			switch(skip) {
-				case 1:
-					tmp = RA(1);
-				  STORE_CALLSITE_AND_CHECK_EXIT;
-				case 2:
-					tmp = RA(2);
-				  STORE_CALLSITE_AND_CHECK_EXIT;
-				case 3:
-					tmp = RA(3);
-  				  STORE_CALLSITE_AND_CHECK_EXIT;
-				case 4:
-					tmp = RA(4);
-				  STORE_CALLSITE_AND_CHECK_EXIT;
-				case 5:
-					tmp = RA(5);
-				    STORE_CALLSITE_AND_CHECK_EXIT;
-				case 6:
-					tmp = RA(6);
-				    STORE_CALLSITE_AND_CHECK_EXIT;
-				case 7:
-					tmp = RA(7);
-				    STORE_CALLSITE_AND_CHECK_EXIT;
-				case 8:
-					tmp = RA(8);
-				    STORE_CALLSITE_AND_CHECK_EXIT;
-				default:
-					break;
-			}
-		}
+      switch(skip) {
+      case 1:
+	tmp = RA(1);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 2:
+	tmp = RA(2);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 3:
+	tmp = RA(3);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 4:
+	tmp = RA(4);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 5:
+	tmp = RA(5);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 6:
+	tmp = RA(6);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 7:
+	tmp = RA(7);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      case 8:
+	tmp = RA(8);
+	STORE_CALLSITE_AND_CHECK_EXIT;
+      default:
+	break;
+      }
+    }
       
     //fprintf(stderr, "FETCH: skip %d now exit\n", skip);
 
-		return frames;
-	}
+    return frames;
+  }
 #endif
 
-	unsigned long _callsite[CALL_SITE_DEPTH];
+  unsigned long _callsite[CALL_SITE_DEPTH];
 };
 
 #endif /* __CALLSITE_H__ */
