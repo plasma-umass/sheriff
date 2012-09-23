@@ -28,8 +28,8 @@ class xpagestore {
 
 public:
   xpagestore()
-    : _start (NULL),
-      _cur (0)
+    : _cur (0),
+      _start (NULL)
   { }
 
   static xpagestore& getInstance (void) {

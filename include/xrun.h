@@ -3,7 +3,7 @@
 /*
   Author: Emery Berger, http://www.cs.umass.edu/~emery
  
-  Copyright (c) 2007-8 Emery Berger, University of Massachusetts Amherst.
+  Copyright (c) 2007-12 Emery Berger, University of Massachusetts Amherst.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -51,11 +51,11 @@ class xrun {
 
 private:
 
-  xrun (void)
-  : _isInitialized (false),
-    _isProtected (false),
-    _locks(0),
-    _memory (xmemory::getInstance())
+  xrun()
+  : _locksHeld (0),
+    _isInitialized (false),
+    _memory (xmemory::getInstance()),
+    _isProtected (false)
   {
   }
 
@@ -69,7 +69,7 @@ public:
   }
 
   /// @brief Initialize the system.
-  void initialize (void)
+  void initialize()
   {
     pid_t pid = syscall(SYS_getpid);
  
@@ -144,7 +144,7 @@ public:
   /// @return an opaque object used by sync.
   inline void * spawn (threadFunction * fn, void * arg)
   {
-    _locks = 0;
+    _locksHeld = 0;
     return _thread.spawn (this, fn, arg);
   }
 
@@ -265,7 +265,7 @@ public:
   }
 
   void cond_broadcast (void * cond) {
-    if(_locks != 0) {
+    if(_locksHeld != 0) {
       atomicEnd(false, true);
       _sync.cond_broadcast (cond);
       atomicBegin(false, false);
@@ -277,7 +277,7 @@ public:
   }
 
   void cond_signal (void * cond) {
-    if(_locks != 0) {
+    if(_locksHeld != 0) {
       atomicEnd(false, true);
       _sync.cond_signal (cond);
       atomicBegin(false, false);
@@ -315,7 +315,7 @@ private:
   xthread	_thread;
   xsync  	_sync;
 
-  int 		_locks;
+  unsigned int _locksHeld;
 
   /// The memory manager (for both heap and globals).
   xmemory&     _memory;

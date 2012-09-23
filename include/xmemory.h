@@ -227,7 +227,7 @@ Remalloc_again:
     }
   }
 
-  inline int setThreadIndex (int heapid) {
+  inline void setThreadIndex (int heapid) {
     _heapid = heapid%xdefines::NUM_HEAPS;
     _bheap.setHeapId(heapid%xdefines::NUM_HEAPS);
   }

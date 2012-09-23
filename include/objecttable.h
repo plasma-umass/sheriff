@@ -81,7 +81,6 @@ public:
   }
   
   void insertObject(ObjectInfo & object) {
-    bool isExist = false;
     callsiteType::iterator i;
     CallSite callsite;
     
