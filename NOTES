@@ -1,0 +1,30 @@
+NOTES:
+
+The threads-as-processes framework is helpful to improve performance
+for the following cases:
+
+   a. Long transactions.
+   b. False sharing inside.
+
+To work as a runtime system, we want to be passive. That is, we only
+protect pages when there is some benefit to do so.
+
+1. Since we have to pay some overhead for transaction end and begin,
+   which should be avoided as much as possible since the benefit of
+   tolerating false sharing can easily be overwhelmed by the overhead
+   of transaction overhead.
+
+2. When one page has been protected before, which we can't find some
+   benefit, we tend to un-protect this page forever even if there is
+   memory re-usage in this page.  So protection can happen only on one
+   address once.
+
+3. If we have a chance to detect some callsite which can cause the
+   false sharing problem.  We are trying to remember that for the
+   future runs.
+
+4. Sometimes we need to reprotect the memory if we find that is useful
+   to do so. Thus, we are keeping track of the transaction size.  If
+   the transaction length is larger than one interval, we are
+   protecting those new memory again. Then we can evaluate performance
+   again later.
