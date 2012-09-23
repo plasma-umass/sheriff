@@ -38,29 +38,29 @@ public:
     //fprintf(stderr, "xoneheap constructor.\n");
   }
 
-  void initialize (void) { getHeap()->initialize(); }
+  void initialize() { getHeap()->initialize(); }
   void finalize (void * end) { getHeap()->finalize(end); }
-  void begin (void) { getHeap()->begin(); }
+  void begin() { getHeap()->begin(); }
   void commit (bool doChecking) { getHeap()->commit(doChecking); }
-  void cleanup (void) { getHeap()->cleanup(); }
+  void cleanup() { getHeap()->cleanup(); }
   void setHeapId (int index) { return getHeap()->setHeapId(index); }
 
-  void * getend(void) { return getHeap()->getend(); }
+  void * getend() { return getHeap()->getend(); }
 
-  void stats (void) { getHeap()->stats(); }
+  void stats () { getHeap()->stats(); }
 
-  void openProtection (void) { getHeap()->openProtection(); }
-  void closeProtection (void) { getHeap()->closeProtection(); }
-  void setProtectionPeriod (void) { getHeap()->setProtectionPeriod(); }
+  void openProtection() { getHeap()->openProtection(); }
+  void closeProtection() { getHeap()->closeProtection(); }
+  void setProtectionPeriod() { getHeap()->setProtectionPeriod(); }
   void unprotectNonProfitPages (void *end) { getHeap()->unprotectNonProfitPages(end); }
    
-  int getDirtyPages(void) { getHeap()->getDirtyPages(); }
+  int getDirtyPages() { return getHeap()->getDirtyPages(); }
  
-  bool nop (void) { return getHeap()->nop(); }
+  bool nop() { return getHeap()->nop(); }
  
   bool inRange (void * ptr) { return getHeap()->inRange(ptr); }
   void handleWrite (void * ptr) { getHeap()->handleWrite(ptr); }
-  void periodicCheck (void) { getHeap()->periodicCheck( ); }
+  void periodicCheck() { getHeap()->periodicCheck( ); }
 
   void * malloc (size_t sz) { return getHeap()->malloc(sz); }
   void free (void * ptr) { getHeap()->free(ptr); }
