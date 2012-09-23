@@ -46,7 +46,7 @@ CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/heap -I$(INCLUDE_DIR)/util -I$(IN
 
 
 # -march=core2 -msse3 -DSSE_SUPPORT 
-CFLAGS   = -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
+CFLAGS   = -Wall -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
 CFLAGS32 = $(CFLAGS) -m32 -DX86_32BIT # -O3
 CFLAGS64 = $(CFLAGS) -m64 # -O3
 
