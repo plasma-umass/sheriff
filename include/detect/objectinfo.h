@@ -3,6 +3,8 @@
 #ifndef SHERIFF_OBJECTINFO_H
 #define SHERIFF_OBJECTINFO_H
 
+#include "wordchangeinfo.h"
+
 class ObjectInfo {
 public:
   bool is_heap_object;
@@ -17,8 +19,8 @@ public:
   unsigned long * start;
   unsigned long * stop;
   void * symbol;     // Used for globals only.
-  struct wordchangeinfo* wordchange_start;
-  struct wordchangeinfo* wordchange_stop;
+  wordchangeinfo* wordchange_start;
+  wordchangeinfo* wordchange_stop;
   unsigned long callsite[CALL_SITE_DEPTH];
 };
 
