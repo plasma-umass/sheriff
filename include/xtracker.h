@@ -520,7 +520,7 @@ public:
           objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
           
           // save callsite.
-          memcpy((void *)&objectinfo.callsite, (void *)((intptr_t)object + object->getCallsiteOffset()), object->getCallsiteLenth());
+          memcpy((void *)&objectinfo.callsite, (void *)((intptr_t)object + object->getCallsiteOffset()), object->getCallsiteLength());
           
           // Check the first object for share type.
           objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (struct wordchangeinfo *)objectinfo.wordchange_start);
