@@ -89,7 +89,7 @@ public:
     // objects with the same callsite into one object.
 
     if (object.is_heap_object) {
-      memcpy(&callsite, object.callsite, CALL_SITE_DEPTH * sizeof(unsigned long));
+      memcpy(&callsite, &object.callsite, CALL_SITE_DEPTH * sizeof(unsigned long));
 
       // Check whether we can find this callsite
       i = _callsites.find(callsite);
