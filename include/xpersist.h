@@ -13,6 +13,8 @@
 #include <unistd.h>
 #endif
 
+#include "mm.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,12 +110,9 @@ public:
     // Establish two maps to the backing file.
     //
     // The persistent map is shared.
-    _persistentMemory = (Type *) mmap (NULL,
-				       NElts * sizeof(Type),
-				       PROT_READ | PROT_WRITE,
-				       MAP_SHARED,
-				       _backingFd,
-				       0);
+    _persistentMemory
+      = (Type *) MM::allocateShared (NElts * sizeof(Type),
+				     _backingFd);
 
     if (_persistentMemory == MAP_FAILED) {
       char buf[255];
@@ -141,13 +140,11 @@ public:
     // The transient map is optionally fixed at the desired start
     // address.
 
-    _transientMemory = (Type *) mmap (_startaddr,
-				      NElts * sizeof(Type),
-				      PROT_READ | PROT_WRITE,
-				      MAP_SHARED | (startaddr != NULL ? MAP_FIXED : 0),
-				      _backingFd,
-				      0);
-    
+    _transientMemory
+      = (Type *) MM::allocateShared (NElts * sizeof(Type),
+				     _backingFd,
+				     startaddr);
+
     _isProtected = false;
   
 #ifndef NDEBUG
@@ -155,79 +152,49 @@ public:
 #endif
 
     _pageUsers = (unsigned long *)
-        mmap (NULL,
-          TotalPageNums * sizeof(unsigned long),
-          PROT_READ | PROT_WRITE,
-          MAP_SHARED | MAP_ANONYMOUS,
-          -1,
-          0);
+      MM::allocateShared (TotalPageNums * sizeof(unsigned long));
       
     _cacheLastthread = (unsigned long *)
-        mmap(NULL,
-          TotalCacheNums * sizeof(unsigned long),
-          PROT_READ | PROT_WRITE,
-          MAP_SHARED | MAP_ANONYMOUS,
-          -1,
-          0);
+      MM::allocateShared (TotalCacheNums * sizeof(unsigned long));
   
 #if defined(DETECT_FALSE_SHARING) 
     // Finally, map the version numbers.
     _globalSharedInfo = (bool *)
-      mmap (NULL,
-      TotalPageNums * sizeof(bool),
-      PROT_READ | PROT_WRITE,
-        MAP_SHARED | MAP_ANONYMOUS,
-        -1,
-      0);
+      MM::allocateShared (TotalPageNums * sizeof(bool));
     
     _localSharedInfo = (bool *)
-      mmap (NULL,
-      TotalPageNums * sizeof(bool),
-      PROT_READ | PROT_WRITE,
-      MAP_PRIVATE | MAP_ANONYMOUS,
-      -1,
-      0);
+      MM::allocatePrivate (TotalPageNums * sizeof(bool));
 
     // We need to preset those shared information.
     // In the beginning, everything are set to NON_SHARED.
-    if(_globalSharedInfo == NULL || _localSharedInfo == NULL) {
-      fprintf(stderr, "Failed  to initialize the shareinfo. Exit now!!!!\n");
+    if (_globalSharedInfo == MAP_FAILED || _localSharedInfo == MAP_FAILED) {
+      fprintf(stderr, "Failed to initialize shared info.\n");
       ::abort();
     }
 //  memset(_globalSharedInfo, 0, TotalPageNums * sizeof(bool));
 //  memset(_localSharedInfo, 0, TotalPageNums * sizeof(bool));
     _cacheInvalidates = (unsigned long *)
-      mmap (NULL,
-        TotalCacheNums * sizeof(unsigned long),
-        PROT_READ | PROT_WRITE,
-        MAP_SHARED | MAP_ANONYMOUS,
-        -1,
-        0);
+      MM::allocateShared (TotalCacheNums * sizeof(unsigned long));
 
     // FIXME: Didn't make sense to have this since most pages are not shared.
     _wordChanges = (struct wordchangeinfo *)
-      mmap (NULL,
-        TotalWordNums * sizeof(struct wordchangeinfo),
-        PROT_READ | PROT_WRITE,
-        MAP_SHARED | MAP_ANONYMOUS,
-        -1,
-        0);
+      MM::allocateShared (TotalWordNums * sizeof(struct wordchangeinfo));
 
     if ((_transientMemory == MAP_FAILED) ||
-      (_globalSharedInfo == MAP_FAILED) ||
-      (_pageUsers == MAP_FAILED) ||
-      (_persistentMemory == MAP_FAILED) ) {
+	(_globalSharedInfo == MAP_FAILED) ||
+	(_pageUsers == MAP_FAILED) ||
+	(_persistentMemory == MAP_FAILED) ) {
       fprintf(stderr, "mmap error with %s\n", strerror(errno));
       // If we couldn't map it, something has seriously gone wrong. Bail.
       ::abort();
     }
   
     if(_isHeap) {
-      xheapcleanup::getInstance().storeProtectHeapInfo(
-                (void *)_transientMemory, 
-                size(),
-                (void *)_cacheInvalidates, 
-                (void *)_wordChanges);
+      xheapcleanup::getInstance().storeProtectHeapInfo
+	((void *)_transientMemory, 
+	 size(),
+	 (void *)_cacheInvalidates, 
+	 (void *)_wordChanges);
     }
 #endif
     // A string of one bits.
