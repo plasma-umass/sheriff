@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 /*
   Copyright (C) 2011 University of Massachusetts Amherst.
 
@@ -33,86 +35,88 @@
 
 class objectHeader {
 public:
-	enum { MAGIC = 0xCAFEBABE };
+  enum { MAGIC = 0xCAFEBABE };
 
-	objectHeader (size_t sz)
-	: _size (sz),
-   	  _magic (MAGIC)
-	{
-	}
+  objectHeader (size_t sz)
+    : _size (sz),
+      _magic (MAGIC)
+  {
+  }
 
-	size_t getSize (void) { sanityCheck(); return _size; }
+  size_t getSize () { sanityCheck(); return _size; }
 
 #ifdef DETECT_FALSE_SHARING
-	size_t getCallsiteOffset(void) {
-		return (sizeof(size_t) * 2);
-	}
+  size_t getCallsiteOffset() {
+    // EDB: Huh? FIX ME
+    return sizeof(size_t) * 2;
+  }
 
-	int getCallsiteLenth(void) {
-		return (CALL_SITE_DEPTH * sizeof(unsigned long));
-	}
+  int getCallsiteLength() {
+    return sizeof(CallSite);
+    // return CALL_SITE_DEPTH * sizeof(unsigned long);
+  }
 
-	void * getCallsite(void) {
-		return((void *)&_callsites);
-	}
+#if 0
+  // EDB: This is insanity and should never be done.
+  void * getCallsite() {
+    return (void *) &_callsites;
+  }
+#endif
 	
-	
-	CallSite & getCallsiteRef(void) {
-		return((CallSite &)_callsites);
-	}
+  CallSite& getCallsiteRef() {
+    return _callsites;
+  }
 
-	void store_callsite(CallSite & callsite) {
-		for(int i = 0; i < callsite.get_depth(); i++) {
-			_callsites._callsite[i] = callsite._callsite[i];
-		}
-	}
+  void store_callsite (CallSite& callsite) {
+    for(int i = 0; i < callsite.get_depth(); i++) {
+      _callsites._callsite[i] = callsite._callsite[i];
+    }
+  }
  
- bool sameCallsite(CallSite *callsite) {
-		bool ret = true;
+  bool sameCallsite(CallSite *callsite) {
+    bool ret = true;
 
-		for(int i = 0; i < CALL_SITE_DEPTH; i++) {
-			if(_callsites._callsite[i] != callsite->_callsite[i]) {
-				ret = false; 
-				break;
-			}
-		}
+    for(int i = 0; i < CALL_SITE_DEPTH; i++) {
+      if (_callsites._callsite[i] != callsite->_callsite[i]) {
+	ret = false; 
+	break;
+      }
+    }
         
-    return (ret);
+    return ret;
   }
 #endif
 
-	bool isValidObject(void) {
-		bool ret = false;
-		ret = sanityCheck();
-		if(ret == true) {
-			// FIXME: _size should be multiple of 8s according to our heap implementation.
-			ret = (_size % 8 == 0)? true : false;
-		}
-		return ret;		
-	}
+  bool isValidObject() {
+    bool ret = false;
+    ret = sanityCheck();
+    if (ret) {
+      // FIXME: _size should be multiple of 8s according to our heap implementation.
+      ret = (_size % 8 == 0)? true : false;
+    }
+    return ret;		
+  }
 
-	bool verifyMagic(void) {
-		if(_magic == MAGIC)
-			return (true);
-		else
-			return (false);
-	}
+  bool verifyMagic() {
+    return (_magic == MAGIC);
+  }
+
 private:
 
-	bool sanityCheck (void) {
+  bool sanityCheck (void) {
 #ifndef NDEBUG
-	  if (_magic != MAGIC) {
-	    fprintf (stderr, "Sanity check failed in process %d. Current _magic %x at %p\n", getpid(), _magic, &_magic);
-	    ::abort();
-	  }
+    if (_magic != MAGIC) {
+      fprintf (stderr, "Sanity check failed in process %d. Current _magic %x at %p\n", getpid(), _magic, &_magic);
+      ::abort();
+    }
 #endif
-	  return true;
-	}
+    return true;
+  }
 
-	size_t _magic;
-	size_t _size;
+  size_t _magic;
+  size_t _size;
 #ifdef DETECT_FALSE_SHARING
-	CallSite _callsites;
+  CallSite _callsites;
 #endif
 };
 
