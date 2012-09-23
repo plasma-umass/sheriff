@@ -39,12 +39,12 @@ public:
   {
     // Allocate a shared page to hold all heap metadata.
     char * base = (char *) allocateShared (xdefines::PageSize);
-    _trans       = (int *)base;
-    _interwrites = (int *)(base + 1 * sizeof(int));
-    _events      = (int *)(base + 2 * sizeof(int));
-    _pages       = (int *)(base + 3 * sizeof(int));
-    _caches      = (int *)(base + 4 * sizeof(int));
-    _prots       = (int *)(base + 5 * sizeof(int));
+    _trans       = (unsigned long *)base;
+    _interwrites = (unsigned long *)(base + 1 * sizeof(unsigned long));
+    _events      = (unsigned long *)(base + 2 * sizeof(unsigned long));
+    _pages       = (unsigned long *)(base + 3 * sizeof(unsigned long));
+    _caches      = (unsigned long *)(base + 4 * sizeof(unsigned long));
+    _prots       = (unsigned long *)(base + 5 * sizeof(unsigned long));
   
     // EDB NOTE: In theory, this is unnecessary, since these pages should
     // be demand-zero.
@@ -68,43 +68,43 @@ public:
   // This function will be called after one page's checking has been
   // finished.  So it is possible that we will have multiple
   // interleaving invalidates in one page.
-  void updateInvalidates(void * addr, int num) {
-    atomic::add(num, (volatile unsigned long *)_interwrites);
+  void updateInvalidates(void * addr, unsigned long num) {
+    atomic::add(num, (volatile unsigned long *) _interwrites);
   }
 
-  int getTrans() {
+  unsigned long getTrans() {
     return *_trans;
   }
 
-  int updateTrans() {
+  unsigned long updateTrans() {
     return atomic::increment_and_return((volatile unsigned long *)_trans);
   }
 
-  int updateEvents() {
+  unsigned long updateEvents() {
     return atomic::increment_and_return((volatile unsigned long *)_events);
   }
 
-  int updateCaches() {
+  unsigned long updateCaches() {
     return atomic::increment_and_return((volatile unsigned long *)_caches);
   }
 
- int updateDirtyPage() {
+ unsigned long updateDirtyPage() {
     return atomic::increment_and_return((volatile unsigned long *)_pages);
   }
 
-  int updateProtects() {
+  unsigned long updateProtects() {
     return atomic::increment_and_return((volatile unsigned long *)_prots);
   }
 
-  int getCaches() {
+  unsigned long getCaches() {
     return *_caches;
   }
 
-  int getProtects() {
+  unsigned long getProtects() {
     return *_prots;
   }
 
-  int getDirtyPages() {
+  unsigned long getDirtyPages() {
     return *_pages;
   }
 
@@ -119,12 +119,12 @@ private:
 		       0);
   }
 
-  int * _trans;
-  int * _interwrites;
-  int * _events;
-  int * _pages;
-  int * _prots;
-  int * _caches;
+  unsigned long * _trans;
+  unsigned long * _interwrites;
+  unsigned long * _events;
+  unsigned long * _pages;
+  unsigned long * _prots;
+  unsigned long * _caches;
 };
 
 #endif
