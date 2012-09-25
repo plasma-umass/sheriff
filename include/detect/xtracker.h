@@ -18,6 +18,7 @@
 #include <errno.h>
 
 #include "mm.h"
+#include "objectinfo.h"
 #include "objecttable.h"
 #include "objectheader.h"
 #include "elfinfo.h"
@@ -96,7 +97,7 @@ public:
     }
 
     for(objectListType::iterator i = objectlist.begin(); i != objectlist.end(); i++) {
-      struct objectinfo & object = i->second;
+      ObjectInfo & object = i->second;
       k++;
 
         
@@ -504,7 +505,7 @@ public:
           objectwrites = getObjectWrites(objectStart, nextobject, memstart, wordchange);
   
           // Check how many objects are located in the last cache line.
-          struct objectinfo objectinfo;
+          ObjectInfo objectinfo;
           
           // Save object information.
           objectinfo.is_heap_object = true;
@@ -566,7 +567,7 @@ public:
       // Since there is no accumulation for global objects.
       if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
         // Save the object information
-        struct objectinfo objectinfo;
+        ObjectInfo objectinfo;
         objectinfo.is_heap_object = false;
         //objectinfo.is_heap_object = true;
         objectinfo.interwrites = interwrites;
