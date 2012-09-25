@@ -46,28 +46,17 @@ public:
   size_t getSize () { sanityCheck(); return _size; }
 
 #ifdef DETECT_FALSE_SHARING
-  size_t getCallsiteOffset() {
-    // EDB: Huh? FIX ME
-    return sizeof(size_t) * 2;
-  }
 
   int getCallsiteLength() {
     return sizeof(CallSite);
     // return CALL_SITE_DEPTH * sizeof(unsigned long);
   }
 
-#if 0
-  // EDB: This is insanity and should never be done.
-  void * getCallsite() {
-    return (void *) &_callsites;
-  }
-#endif
-	
   CallSite& getCallsiteRef() {
     return _callsites;
   }
 
-  void store_callsite (CallSite& callsite) {
+  void storeCallsite (CallSite& callsite) {
     for(int i = 0; i < callsite.get_depth(); i++) {
       _callsites._callsite[i] = callsite._callsite[i];
     }
