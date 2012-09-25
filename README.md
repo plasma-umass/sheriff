@@ -19,6 +19,9 @@ Running `make` builds two variants of the Sheriff library, in 32-bit and 64-bit 
 
 2. *Sheriff_Detect*: Use either `libsheriff_detect32.so` or `libsheriff_detect64.so` to find false sharing problems (reported after the program finishes execution).
 
+***NOTE: You may need to install the 32-bit libraries in order to build 32-bit executables. On Debian, for example, type `sudo yum install glibc-devel.i686` and `sudo yum install libstdc++.i686`.
+
+
 ### Using Sheriff ###
 
 Sheriff currently supports Linux x86 platforms.
