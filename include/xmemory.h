@@ -156,10 +156,10 @@ Remalloc_again:
       atomic::add(sz, (unsigned long *)&cleanupSize);
   #endif
       // Save the new callsite information.
-      memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
+      obj->storeCallsite (callsite);
     } else if (!isProtected) {
       // Save callsite to object header.
-      memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
+      obj->storeCallsite (callsite);
     }
   #ifdef GET_CHARACTERISTICS
     atomic::increment((unsigned long *)&allocTimes);
