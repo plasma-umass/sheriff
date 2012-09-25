@@ -47,9 +47,8 @@ public:
 
 #ifdef DETECT_FALSE_SHARING
 
-  int getCallsiteLength() {
+  int getCallsiteLength() const {
     return sizeof(CallSite);
-    // return CALL_SITE_DEPTH * sizeof(unsigned long);
   }
 
   CallSite& getCallsiteRef() {
@@ -57,12 +56,12 @@ public:
   }
 
   void storeCallsite (CallSite& callsite) {
-    for(int i = 0; i < callsite.get_depth(); i++) {
+    for (int i = 0; i < callsite.get_depth(); i++) {
       _callsites._callsite[i] = callsite._callsite[i];
     }
   }
  
-  bool sameCallsite(CallSite *callsite) {
+  bool sameCallsite(CallSite *callsite) const {
     bool ret = true;
 
     for(int i = 0; i < CALL_SITE_DEPTH; i++) {

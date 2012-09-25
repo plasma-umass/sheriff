@@ -69,7 +69,7 @@ public:
     _lock->lock();
     
     if (*_remaining < sz) {
-      fprintf (stderr, "Out of memory error: available = %u, requested = %u, thread = %d.\n", *_remaining, sz, pthread_self());
+      fprintf (stderr, "Out of memory error: available = %u, requested = %u, thread = %d.\n", *_remaining, sz, (int) pthread_self());
       exit(-1);
     }
 
