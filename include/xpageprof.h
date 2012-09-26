@@ -20,6 +20,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "mm.h"
+
 #ifdef TRACK_RACE
 #include "xtracker.h"
 #endif
@@ -41,18 +43,16 @@ public:
     : _totalpages(0)
   {
     // Allocate one shared page to store statistics.
-    char * start = (char *)mmap (NULL,
-				 xdefines::PageSize,
-				 PROT_READ | PROT_WRITE,
-				 MAP_SHARED | MAP_ANONYMOUS,
-				 -1,
-				 0);
+    char * start
+      = (char *) MM::allocateShared (xdefines::PageSize);
+
     if (start == MAP_FAILED) {
       fprintf(stderr, "Failed to mmap pages to store page user info %s\n", strerror(errno));
       ::abort();
     }
     
-    memset(start, 0, xdefines::PageSize);
+    // EDB FIX ME Isn't this definitely unnecessary?
+    memset (start, 0, xdefines::PageSize);
     
     // Initialize the data.
     _commits     = (unsigned long *)start;
@@ -64,18 +64,15 @@ public:
     // Calculate total pages.
     _totalpages = NElts * sizeof(Type)/xdefines::PageSize;
 
-    _pageInfo = (struct pageUserInfo *)mmap(NULL,
-					    _totalpages * sizeof(pageUserInfo),
-					    PROT_READ | PROT_WRITE,
-					    MAP_SHARED | MAP_ANONYMOUS,
-					    -1,
-					    0);
+    _pageInfo = (struct pageUserInfo *)
+      MM::allocateShared (_totalpages * sizeof(pageUserInfo));
+
     if(_pageInfo == MAP_FAILED) {
       fprintf(stderr, "Failed to mmap pages to store page user info %s\n", strerror(errno));
       ::abort();
     }
 
-    // Zero out data.
+    // Zero out data. FIX ME EDB See above comment on zeroing.
     memset(_pageInfo, 0, _totalpages * sizeof(pageUserInfo));
   }
 
@@ -100,12 +97,13 @@ public:
 	usages += _pageInfo[i].usages;
       }
       
-      if(_pageInfo[i].usages != 0)
+      if (_pageInfo[i].usages != 0)
 	totalpages++; 
     }
 	
-    overhead = (double)(*_dirtypages) * 20.0 /1000000.00;
-    improvement = (double)(usages) * 20.0 /1000000.00;
+    // EDB FIX ME What's with the magic numbers here?
+    overhead = (double) *_dirtypages * 20.0 /1000000.00;
+    improvement = (double) usages * 20.0 /1000000.00;
     
     fprintf(stderr, "Total pages %ld, single-process pages %ld use %d times, estimated time %f s, room for improvement %f s. Single pages %ld\n", totalpages,  pages,  usages, overhead, improvement, *_singlepages);
   }
@@ -113,20 +111,20 @@ public:
 private:
 
   void updateSinglepages (int count) {
-    (*_singlepages) += count;
+    *_singlepages += count;
   }
   
   void updateCommitInfo (int pages) {
-    (*_commits) += 1;
-    (*_dirtypages) += pages;
+    *_commits += 1;
+    *_dirtypages += pages;
     //fprintf(stderr, "dirty pages %x\n", *_dirtypages);
-    if(pages == 1)
-      (*_shorttrans) += 1;
+    if (pages == 1)
+      *_shorttrans += 1;
   }
 
   void updateRollbackInfo() {
-    (*_commits) += 1;
-    (*_rollbacks) += 1;
+    *_commits += 1;
+    *_rollbacks += 1;
   }
 
   void updatePageInfo (int pageNo) {
