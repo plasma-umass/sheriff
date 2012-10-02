@@ -88,6 +88,11 @@ public:
       _callsite[*frames] = tmp-5;
       (*frames)++;
     }
+    else if((*frames) >= 1) {
+      // We should stop getting callsites if we already jump out of text segment. 
+      // Otherwise, some application will crash, fixed by Tongping Liu (09/28/1012).
+      (*frames) = CALL_SITE_DEPTH;
+    }
   }
 
   /// The following function is borrowed from plug project that is written by Gene Nowark.
