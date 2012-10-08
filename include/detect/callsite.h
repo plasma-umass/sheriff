@@ -42,13 +42,13 @@ public:
     }
   }
 
-  unsigned long get_item(unsigned int index)
+  unsigned long getItem(unsigned int index)
   {
     assert (index < CALL_SITE_DEPTH);
     return _callsite[index];
   }
 
-  unsigned long get_depth() 
+  unsigned long getDepth() 
   {
     return CALL_SITE_DEPTH;
   }
@@ -84,8 +84,10 @@ public:
 #else
   // Check and store callsite
   inline void storeCallsite(unsigned long tmp, unsigned long * frames) {
+    //fprintf(stderr, "try to store callsite with tmp %lx and frames %d\n", tmp, *frames);
     if ((tmp > textStart) && (tmp < textEnd)) {
       _callsite[*frames] = tmp-5;
+      //fprintf(stderr, "Saving callsite %p\n", _callsite[*frames]);
       (*frames)++;
     }
     else if((*frames) >= 1) {
@@ -121,7 +123,6 @@ public:
     unsigned long tmp;
     unsigned long frames = 0;
 	
-    //while(1) ;	
     // setjmp should be OK here because SEGV can't be masked.
     // And sigsetjmp requires a kernel crossing and is fscking expensive in any case.
     if(setjmp(__backtrace_jump) == 0) {

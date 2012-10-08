@@ -5,7 +5,8 @@
 #include <iostream>
 using namespace std;
 
-enum { MAX_THREADS = 256 };
+enum { MAX_THREADS = 8 };
+//enum { NUM_ITERATIONS = 800000000 };
 enum { NUM_ITERATIONS = 80000000 };
 
 class Item {
@@ -41,8 +42,13 @@ main()
 
   pthread_t thread[MAX_THREADS];
 
+  while(1);
+
   cout << "Starting threads." << endl;
-  cout << "theItem is at " << (void *) &theItem << endl;
+//  cout << "theItem is at " << (void *) &theItem << endl;
+  fprintf(stderr, "theItem is at %p pointing to %p\n", &theItem, theItem);
+
+  fprintf(stderr, "%d: BEFORE creation\n", getpid());
 
   for (int i = 0; i < 8; i++) {
     pthread_create (&thread[i], NULL, worker, (void *) i);

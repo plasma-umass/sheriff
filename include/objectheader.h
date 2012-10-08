@@ -51,12 +51,12 @@ public:
     return sizeof(CallSite);
   }
 
-  CallSite& getCallsiteRef() {
-    return _callsites;
+  CallSite* getCallsiteRef() {
+    return &_callsites;
   }
 
   void storeCallsite (CallSite& callsite) {
-    for (int i = 0; i < callsite.get_depth(); i++) {
+    for (int i = 0; i < callsite.getDepth(); i++) {
       _callsites._callsite[i] = callsite._callsite[i];
     }
   }

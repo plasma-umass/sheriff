@@ -29,6 +29,7 @@ void xthread::join (xrun * runner,
             void * v,
             void ** result)
 {
+ // fprintf(stderr, "%d: joining thread\n", getpid());
 
   // Return immediately if the thread argument is NULL.
   if (v == NULL) {
@@ -136,7 +137,7 @@ void * xthread::forkSpawn (xrun * runner,
     // We're in...
     _nestingLevel++;
 
-  //fprintf(stderr, "Create thread %d\n", mypid);
+ // fprintf(stderr, "Create thread %d\n", mypid);
 #ifdef MULTITHREAD_SUPPORT
 	// Create those helpers.
 	runner->creatHelpers();
@@ -147,6 +148,7 @@ void * xthread::forkSpawn (xrun * runner,
     runner->closeParentSharedBlocks();
 #endif
 
+    //while(1); 
     // Run the thread...
     run_thread (runner, fn, t, arg);
 

@@ -1,0 +1,28 @@
+g++ -g -Iinclude -Iinclude/detect -Iinclude/heap -Iinclude/util -Iinclude/sync -DDETECT_FALSE_SHARING -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer -m32 -DX86_32BIT  -I. -I./heaplayers -I./heaplayers/util -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x'  source/libsheriff.cpp source/realfuncs.cpp source/xthread.cpp source/dlmalloc.c source/finetime.c source/gnuwrapper.cpp -o libsheriff_detect32.so  -ldl -lpthread
+include/detect/xtracker.h: In constructor 'xtracker<NElts>::xtracker() [with unsigned int NElts = 20971520u]':
+include/xpersist.h:80:   instantiated from 'xpersist<Type, NElts>::xpersist(void*, size_t) [with Type = char, unsigned int NElts = 20971520u]'
+include/xglobals.h:81:   instantiated from here
+include/detect/xtracker.h:52: error: invalid conversion from 'long unsigned int*' to 'int*'
+include/detect/xtracker.h:52: error:   initializing argument 2 of 'void* xtracker<NElts>::grab_file(const char*, int*) [with unsigned int NElts = 20971520u]'
+include/detect/xtracker.h: In constructor 'xtracker<NElts>::xtracker() [with unsigned int NElts = 1048576000u]':
+include/xpersist.h:80:   instantiated from 'xpersist<Type, NElts>::xpersist(void*, size_t) [with Type = char, unsigned int NElts = 1048576000u]'
+include/heap/xheap.h:55:   instantiated from 'xheap<Size>::xheap() [with long unsigned int Size = 1048576000ul]'
+include/heap/xoneheap.h:81:   instantiated from 'SourceHeap* xoneheap<SourceHeap>::getHeap() [with SourceHeap = xheap<1048576000ul>]'
+include/heap/xoneheap.h:41:   instantiated from 'void xoneheap<SourceHeap>::initialize() [with SourceHeap = xheap<1048576000ul>]'
+include/xmemory.h:92:   instantiated from here
+include/detect/xtracker.h:52: error: invalid conversion from 'long unsigned int*' to 'int*'
+include/detect/xtracker.h:52: error:   initializing argument 2 of 'void* xtracker<NElts>::grab_file(const char*, int*) [with unsigned int NElts = 1048576000u]'
+include/detect/xtracker.h: In constructor 'xtracker<NElts>::xtracker() [with unsigned int NElts = 20971520u]':
+include/xpersist.h:80:   instantiated from 'xpersist<Type, NElts>::xpersist(void*, size_t) [with Type = char, unsigned int NElts = 20971520u]'
+include/xglobals.h:81:   instantiated from here
+include/detect/xtracker.h:52: error: invalid conversion from 'long unsigned int*' to 'int*'
+include/detect/xtracker.h:52: error:   initializing argument 2 of 'void* xtracker<NElts>::grab_file(const char*, int*) [with unsigned int NElts = 20971520u]'
+include/detect/xtracker.h: In constructor 'xtracker<NElts>::xtracker() [with unsigned int NElts = 1048576000u]':
+include/xpersist.h:80:   instantiated from 'xpersist<Type, NElts>::xpersist(void*, size_t) [with Type = char, unsigned int NElts = 1048576000u]'
+include/heap/xheap.h:55:   instantiated from 'xheap<Size>::xheap() [with long unsigned int Size = 1048576000ul]'
+include/heap/xoneheap.h:81:   instantiated from 'SourceHeap* xoneheap<SourceHeap>::getHeap() [with SourceHeap = xheap<1048576000ul>]'
+include/heap/xoneheap.h:41:   instantiated from 'void xoneheap<SourceHeap>::initialize() [with SourceHeap = xheap<1048576000ul>]'
+include/xmemory.h:92:   instantiated from here
+include/detect/xtracker.h:52: error: invalid conversion from 'long unsigned int*' to 'int*'
+include/detect/xtracker.h:52: error:   initializing argument 2 of 'void* xtracker<NElts>::grab_file(const char*, int*) [with unsigned int NElts = 1048576000u]'
+make: *** [libsheriff_detect32.so] Error 1

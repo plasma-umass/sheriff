@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef SHERIFF_XTRACKER_H
-#define SHERIFF_XTRACKER_H
+#ifndef _XTRACKER_H_
+#define _XTRACKER_H_
 
 #include <set>
 
@@ -18,12 +18,9 @@
 #include <errno.h>
 
 #include "mm.h"
-#include "wordchangeinfo.h"
-#include "objectinfo.h"
 #include "objecttable.h"
 #include "objectheader.h"
 #include "elfinfo.h"
-#include "callsite.h"
 #include "stats.h"
 
 template <unsigned long NElts = 1>
@@ -99,21 +96,22 @@ public:
     }
 
     for(objectListType::iterator i = objectlist.begin(); i != objectlist.end(); i++) {
-      ObjectInfo & object = i->second;
+      struct objectinfo & object = i->second;
       k++;
+
         
       if(object.interwrites < xdefines::MIN_INTERWRITES_OUTPUT) {
         continue;
       }
-      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual line(s), object writes = %d)\n\tObject start = %lx; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
+      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual line(s), object writes = %d)\n\tObject start = %x; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
       if (object.is_heap_object == true) {
-      //  fprintf(stderr, "\tHeap object accumulated by %d, unit length = %d, total length = %d, cache lines = %d.\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
+        fprintf(stderr, "\tHeap object accumulated by %d, unit length = %d, total length = %d, cache lines = %d.\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
 
         // Print callsite information.
 	fprintf (stderr, "Object allocation call site information:\n");
         CallSite * callsite = (CallSite *) &object.callsite[0];
-        for(int j = 0; j < callsite->getDepth(); j++) {
-          unsigned long ipaddr = callsite->getItem(j);
+        for(int j = 0; j < callsite->get_depth(); j++) {
+          int ipaddr = callsite->get_item(j);
           char command[MAXBUFSIZE];
             
          fprintf(stderr, "Call site %d %lx: ", j, ipaddr);
@@ -320,9 +318,9 @@ public:
     return obj;
   }
 
-  int calcCacheWrites(wordchangeinfo * start, int count) {
-    wordchangeinfo * cur = start;
-    wordchangeinfo * stop = &start[count];
+  int calcCacheWrites(struct wordchangeinfo * start, int count) {
+    struct wordchangeinfo * cur = start;
+    struct wordchangeinfo * stop = &start[count];
     int    writes = 0;
     
     while(cur < stop) {
@@ -334,7 +332,7 @@ public:
   }
 
   // It is simple for us, we just use the forward search.
-  void checkWrites(int * base, int size, wordchangeinfo * wordchange) {
+  void checkWrites(int * base, unsigned long size, struct wordchangeinfo * wordchange) {
     int * pos;
     int * end;
   
@@ -373,11 +371,11 @@ public:
     return writes;  
   }
 
-  bool sameCallsite(CallSite * that1, CallSite * that2) {
+  bool sameCallsite(CallSite & that1, CallSite & that2) {
     bool result = true;
     int i;
     for(i = 0; i < CALL_SITE_DEPTH; i++) {
-      if(that1->_callsite[i] != that2->_callsite[i]) {
+      if(that1._callsite[i] != that2._callsite[i]) {
         result = false;
         break;
       }
@@ -387,7 +385,7 @@ public:
   }
 
   // We will return the start address of next different object. 
-  int * getNextDiffObject(int * pos, int * memend, CallSite * callsite, int unitsize) {
+  int * getNextDiffObject(int * pos, int * memend, CallSite & callsite, int unitsize) {
     int * address = memend;
   
     // We should check object according to the length of one object.
@@ -395,6 +393,7 @@ public:
       if(*pos == objectHeader::MAGIC) {
         objectHeader * object = (objectHeader *)pos;
         
+        // Whether it is correct. FIXME!!!
         if(sameCallsite(callsite, object->getCallsiteRef())) {
           pos = (int *)((intptr_t)&object[1] + object->getSize());
           continue;
@@ -413,11 +412,11 @@ public:
     return address;
   }
 
-  int getObjectWrites(int * start, int * stop, int * memstart, wordchangeinfo * wordchange) {
+  int getObjectWrites(int * start, int * stop, int * memstart, struct wordchangeinfo * wordchange) {
     int offset;
     offset = ((intptr_t)start - (intptr_t)memstart)/sizeof(unsigned long);
       
-    wordchangeinfo * cur = &wordchange[offset];
+    struct wordchangeinfo * cur = &wordchange[offset];
     int    writes = 0;
     int * pos = start;
   
@@ -431,7 +430,7 @@ public:
     return writes;
   }
 
-  int getAccessThreads(unsigned long * start, int unitsize, wordchangeinfo * cur) {
+  int getAccessThreads(unsigned long * start, int unitsize, struct wordchangeinfo * cur) {
     int   offset;
     int   threads = 1;
     int   threadid = cur->tid;
@@ -464,7 +463,7 @@ public:
   }
 
 
-  void checkHeapObjects(unsigned long * cacheInvalidates, int * memstart, int * memend, wordchangeinfo * wordchange) {
+  void checkHeapObjects(unsigned long * cacheInvalidates, int * memstart, int * memend, struct wordchangeinfo * wordchange) {
     int i;
   
     int * pos = memstart;
@@ -505,7 +504,7 @@ public:
           objectwrites = getObjectWrites(objectStart, nextobject, memstart, wordchange);
   
           // Check how many objects are located in the last cache line.
-          ObjectInfo objectinfo;
+          struct objectinfo objectinfo;
           
           // Save object information.
           objectinfo.is_heap_object = true;
@@ -516,15 +515,15 @@ public:
           objectinfo.actuallines = actuallines;
           objectinfo.totallength = (intptr_t)nextobject - (intptr_t)objectStart;
           objectinfo.start = (unsigned long *)&object[1];
-       
-           objectinfo.stop = (unsigned long *)nextobject;
+          objectinfo.stop = (unsigned long *)nextobject;
           objectinfo.wordchange_start = &wordchange[objectOffset/sizeof(unsigned long)];
-          objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
-         
-          memcpy((void *)&objectinfo.callsite, (void *)(object->getCallsiteRef()), object->getCallsiteLength());
+          objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
+          
+          // save callsite.
+          memcpy((void *)&objectinfo.callsite, (void *)((intptr_t)object + object->getCallsiteOffset()), object->getCallsiteLength());
           
           // Check the first object for share type.
-          objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (wordchangeinfo *)objectinfo.wordchange_start);
+          objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (struct wordchangeinfo *)objectinfo.wordchange_start);
           ObjectTable::getInstance().insertObject(objectinfo);        
         }
           pos = (int *)nextobject;
@@ -541,7 +540,7 @@ public:
     return ((start & xdefines::CACHELINE_SIZE_MASK) + size + xdefines::CACHE_LINE_SIZE - 1)/xdefines::CACHE_LINE_SIZE;
   }
 
-  void checkGlobalObjects(unsigned long *cacheInvalidates, int * memBase, unsigned long size, wordchangeinfo * wordchange) {
+  void checkGlobalObjects(unsigned long *cacheInvalidates, int * memBase, unsigned long size, struct wordchangeinfo * wordchange) {
     struct elf_info *elf = &_elf_info;  
     Elf_Ehdr *hdr = elf->hdr;
     Elf_Sym *symbol;
@@ -568,7 +567,7 @@ public:
       // Since there is no accumulation for global objects.
       if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
         // Save the object information
-        ObjectInfo objectinfo;
+        struct objectinfo objectinfo;
         objectinfo.is_heap_object = false;
         //objectinfo.is_heap_object = true;
         objectinfo.interwrites = interwrites;
@@ -582,10 +581,10 @@ public:
         objectinfo.start = (unsigned long *)objectStart;
         objectinfo.stop = (unsigned long *)(objectStart + objectSize);
         objectinfo.wordchange_start = &wordchange[objectOffset/sizeof(unsigned long)];
-        objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
+        objectinfo.wordchange_stop = (struct wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
 
         // Check the first object for share type.
-        objectinfo.access_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (wordchangeinfo *)objectinfo.wordchange_start);
+        objectinfo.access_threads = getAccessThreads((unsigned long *)objectStart, objectSize, (struct wordchangeinfo *)objectinfo.wordchange_start);
         ObjectTable::getInstance().insertObject(objectinfo);
       }
     }

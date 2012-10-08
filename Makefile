@@ -21,6 +21,7 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/realfuncs.h    \
 	$(INCLUDE_DIR)/detect/stats.h \
 	$(INCLUDE_DIR)/detect/xheapcleanup.h \
+	$(INCLUDE_DIR)/detect/callsite.h \
 	$(INCLUDE_DIR)/detect/xtracker.h   \
 	$(INCLUDE_DIR)/heap/xadaptheap.h   \
 	$(INCLUDE_DIR)/heap/xoneheap.h     \
@@ -31,7 +32,6 @@ INCS =  $(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/sync/xplock.h  \
 	$(INCLUDE_DIR)/sync/xsync.h   \
 	$(INCLUDE_DIR)/util/atomic.h       \
-	$(INCLUDE_DIR)/util/callsite.h     \
 	$(INCLUDE_DIR)/util/elfinfo.h      \
 	$(INCLUDE_DIR)/util/finetime.h     \
 	$(INCLUDE_DIR)/util/mm.h
@@ -47,9 +47,11 @@ CXX = g++ -g -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/detect -I$(INCLUDE_DIR)/heap -I$(
 
 
 # -march=core2 -msse3 -DSSE_SUPPORT 
-CFLAGS   = -Wall -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
+#CFLAGS   = -Wall -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
+CFLAGS   = -msse3 -DSSE_SUPPORT -fno-omit-frame-pointer
 CFLAGS32 = $(CFLAGS) -m32 -DX86_32BIT # -O3
-CFLAGS64 = $(CFLAGS) -m64 # -O3
+CFLAGS64 = $(CFLAGS) #-m64 # -O3
+#CFLAGS64 = $(CFLAGS) -m64 # -O3
 
 INCLUDE_DIRS = -I. -I./heaplayers -I./heaplayers/util
 

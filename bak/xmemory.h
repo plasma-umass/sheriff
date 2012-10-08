@@ -156,15 +156,16 @@ Remalloc_again:
       atomic::add(sz, (unsigned long *)&cleanupSize);
   #endif
       // Save the new callsite information.
-      obj->storeCallsite (callsite);
+      memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
     } else if (!isProtected) {
       // Save callsite to object header.
-      obj->storeCallsite (callsite);
+      memcpy((void *)((intptr_t)obj + obj->getCallsiteOffset()), &callsite, sizeof(CallSite));
     }
   #ifdef GET_CHARACTERISTICS
     atomic::increment((unsigned long *)&allocTimes);
   #endif
   }
+  //fprintf(stderr, "xmemory malloc sz %d ptr %p\n", sz, ptr);
 #else
   if(sz <= xdefines::LARGE_CHUNK) 
     ptr = _bheap.malloc (_heapid, sz);
@@ -461,14 +462,17 @@ Remalloc_again:
 
   inline void enableCheck() {
     atomic::atomic_set(&_doChecking, 1);
+   // fprintf(stderr, "%d: ENABLE checking\n", getpid());
   }
 
   inline void disableCheck() {
+   // fprintf(stderr, "%d: DISABLE checking\n", getpid());
     atomic::atomic_set(&_doChecking, 0);
   } 
 
   void doPeriodicChecking () {
     if(_doChecking == 1) {
+   //   fprintf(stderr, "Do periodicchecking with doChecking 1*******\n");
       stopCheckingTimer();
       _globals.periodicCheck();
       _bheap.periodicCheck();
@@ -515,6 +519,8 @@ public:
 #ifdef DETECT_FALSE_SHARING
     xmemory::getInstance().disableCheck();
 #endif
+   // char string[256];
+
     void * addr = siginfo->si_addr; // address of access
 
     // Check if this was a SEGV that we are supposed to trap.
@@ -527,6 +533,8 @@ public:
                 xdefines::PageSize,
                 PROT_READ | PROT_WRITE);
 
+     // sprintf(string, "%d: capture the memory access error at %p\n", getpid(), addr);
+  
     // It is a write operation. Handle that.
       xmemory::getInstance().handleWrite (addr);
     } else if (siginfo->si_code == SEGV_MAPERR) {
@@ -538,6 +546,7 @@ public:
       ::abort();
     }
 
+    //write(1, string, strlen(string));
 #ifdef DETECT_FALSE_SHARING
     xmemory::getInstance().enableCheck();
 #endif
