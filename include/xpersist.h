@@ -55,7 +55,7 @@ extern "C" int madvise(caddr_t addr, size_t len, int advice);
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 template <class Type,
-    long NElts = 1>
+   unsigned long NElts = 1>
 class xpersist {
 public:
   typedef std::pair<int, void *> objType;
@@ -280,18 +280,18 @@ public:
   }
 
 #ifdef DETECT_FALSE_SHARING
-  void writeProtect(void * start, int size) {
+  void writeProtect(void * start, unsigned long size) {
    //if(_isHeap) //FIXME
      mprotect (start, size, PROT_READ);
     return;
   }
 
-  void removeProtect(void * start, int size) {
+  void removeProtect(void * start, unsigned long size) {
     mprotect (start, size, PROT_READ|PROT_WRITE);
     return;
   }
   
-  void* mapRdPrivate(void * start, int size) {
+  void* mapRdPrivate(void * start, unsigned long size) {
     void * area;
     int  offset = (intptr_t)start - (intptr_t)base();
 
@@ -331,7 +331,7 @@ public:
     return (area);
   }
 
-  void *mapRwShared(void * start, int size) {
+  void *mapRwShared(void * start, unsigned long size) {
     void * area;
     int  offset = (intptr_t)start - (intptr_t)base();
 
@@ -351,7 +351,7 @@ public:
     return (area);
  }
 #else
-  void *writeProtect(void * start, int size) {
+  void *writeProtect(void * start, unsigned long size) {
     void * area;
     int  offset = (intptr_t)start - (intptr_t)base();
 
@@ -371,7 +371,7 @@ public:
   }
 
 
-  void * removeProtect(void * start, int size) {
+  void * removeProtect(void * start, unsigned long size) {
     void * area;
     int  offset = (intptr_t)start - (intptr_t)base();
 
@@ -459,7 +459,7 @@ public:
   }
 
   /// @return the size in bytes of the underlying object.
-  inline long size (void) const {
+  inline unsigned long size (void) const {
     if(_isHeap) 
       return NElts * sizeof(Type);
     else
