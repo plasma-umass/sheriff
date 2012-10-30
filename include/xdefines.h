@@ -101,7 +101,7 @@ public:
   enum { PROTECTEDHEAP_CHUNK = 1048576 };
   enum { LARGE_CHUNK = 1024 };
   enum { EVAL_LARGE_HEAP_BASE = 1000 };
-  enum { EVAL_LARGE_HEAP_PROTECTION = 50 }; 
+  enum { EVAL_LARGE_HEAP_PROTECTION = 1000 }; 
 #endif
 
   enum { EVAL_CHECKING_PERIOD = 20 };
