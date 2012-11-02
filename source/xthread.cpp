@@ -10,17 +10,19 @@ void * xthread::spawn (xrun * runner,
 
 	if(!_protected) {
 		runner->openMemoryProtection();
-  		runner->atomicBegin(false, false);
+  	runner->atomicBegin(false, false);
 		_protected = true;
 	}
     
 	runner->atomicEnd(true, false);
-    // Allocate an object to hold the thread's return value.
-    void * buf = allocateSharedObject (4096);
-    HL::sassert<(4096 > sizeof(ThreadStatus))> checkSize;
-    ThreadStatus * t = new (buf) ThreadStatus;
+ 
+  // Allocate an object to hold the thread's return value.
+  void * buf = allocateSharedObject (4096);
+  HL::sassert<(4096 > sizeof(ThreadStatus))> checkSize;
+  ThreadStatus * t = new (buf) ThreadStatus;
 
-    return forkSpawn (runner, fn, t, arg);
+	//runner->atomicBegin(false, false);
+  return forkSpawn (runner, fn, t, arg);
 }
 
 
@@ -29,7 +31,6 @@ void xthread::join (xrun * runner,
             void * v,
             void ** result)
 {
- // fprintf(stderr, "%d: joining thread\n", getpid());
 
   // Return immediately if the thread argument is NULL.
   if (v == NULL) {
@@ -45,6 +46,16 @@ void xthread::join (xrun * runner,
   int status;
   waitpid(t->tid, &status, 0);
 
+  //while(1) ;  
+#if 0
+  while(!WIFEXITED(status)) {
+  //  fprintf(stderr, "%d: Now waitAGAIN!!!!!\n", getpid());
+     waitpid(t->tid, &status, 0);
+  } 
+#endif
+ 
+//  fprintf(stderr, "%d: joining thread %d after waiting\n", getpid(), t->tid);
+  //while(1) ;
   // Grab the thread result from the status structure (set by the thread),
   // reclaim the memory, and return that result.
   if (result != NULL) {
@@ -102,7 +113,6 @@ void * xthread::forkSpawn (xrun * runner,
 			   void * arg) 
 {
   // Use fork to create the effect of a thread spawn.
-
   // FIXME:: For current process, we should close share. 
   // children to use MAP_PRIVATE mapping. Or just let child to do that in the beginning.
   int child = forkWithFS();
@@ -121,7 +131,6 @@ void * xthread::forkSpawn (xrun * runner,
     return (void *) t;
       
   } else {
-
     // I'm the spawned child who will run the thread function.
     // Astoundingly, glibc caches getpid(), and that value is invalid
     // now (it always refers to the parent), so we have to explicitly
@@ -139,12 +148,12 @@ void * xthread::forkSpawn (xrun * runner,
 
  // fprintf(stderr, "Create thread %d\n", mypid);
 #ifdef MULTITHREAD_SUPPORT
-	// Create those helpers.
-	runner->creatHelpers();
+	  // Create those helpers.
+	  runner->creatHelpers();
 #endif
 
 #ifdef EXCLUSIVE_HEAP_USAGE
-	// Close those parent's share blocks since child need to protect those areas.
+	  // Close those parent's share blocks since child need to protect those areas.
     runner->closeParentSharedBlocks();
 #endif
 
@@ -156,8 +165,9 @@ void * xthread::forkSpawn (xrun * runner,
     // and we're out.
     _nestingLevel--;
 
+//	fprintf(stderr, "%d : EXIT thread\n", mypid);
     // And that's the end of this "thread".
-    _exit (0);
+    _exit(0);
 
     // Avoid complaints.
     return NULL;

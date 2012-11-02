@@ -37,7 +37,11 @@
 #include "xthread.h"
 
 // memory
+#if defined(DETECT_FALSE_SHARING)
 #include "xmemory.h"
+#else
+#include "xmemory_opt.h"
+#endif
 
 // Heap Layers
 #include "util/sassert.h"
@@ -150,7 +154,7 @@ public:
 
   /// @brief Wait for a thread.
   inline void join (void * v, void ** result) {
-  #ifdef DETECT_FALSE_SHARING
+  #if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
     _memory.stopCheckingTimer();
   #endif
 

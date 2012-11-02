@@ -30,7 +30,11 @@
 
 
 #include "xdefines.h"
+#if defined(DETECT_FALSE_SHARING)
 #include "xpersist.h"
+#else
+#include "xpersist_opt.h"
+#endif
 
 #if defined(__APPLE__)
 // We are going to use the Mach-O substitutes for _end, etc.,

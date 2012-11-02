@@ -1,21 +1,18 @@
-#define NUMCPUS 2 /* 24 */
+//#define NUMCPUS 24
+//#define NUMCPUS 8
+#define NUMCPUS 24
 #define NUMTHREADS NUMCPUS
-#define NUMROWS 300000
-#define MEMSIZE (100 * 1024 * 1024) /* (200 * 1024 * 1024) */
+#define NUMROWS 1000000
+//#define ITER 10
+#define ITER 10
+//#define MEMSIZE (200 * 1024 * 1024)
+//#define MEMSIZE (20 * 1024 * 1024)
+#define MEMSIZE (20 * 1024 * 1024)
 
 struct CMPEXECOP  {
-         char       ranexec;     /* execute random number gen.      */
-         char       raninit;     /* reinitialize random  sequence   */
-         char       rannoobs;    /* never reuse.store sequence      */
-         char       ranstart;    /* new cmprun                      */
-         char       rannext;     /* advance random number gen       */
          char       der;         /* execute derivative code         */
          char       quiet;       /* ignor errors & missing values   */
          char       errsave;     /* save (^ print) execution errors */
-         char       flow;        /* print execution flow trace      */
-         char       print;       /* print statement results         */
-         char       printall;    /* print operation results         */
-         char       funcTrace;
          } ;
 
 struct CMPEXECS {
@@ -82,7 +79,7 @@ struct TKCMPEXEC {
   void *      jnlLst;      // lst jnl used at run-time
 
 };
-  
+
  struct CMPTHREAD {
    void *     *  pdvs;          /* array a PDVs                        */
    void *        stack_pdv;     /* current PDV on the stack            */
@@ -103,7 +100,7 @@ struct TKCMPEXEC {
 
    struct CMPEXECS   * s;  /* execution symbol values      */
    struct CMPEXECMEM * m;  /* execution memory information */
-   struct CMPEXECOP  * op; /* execution options            */
+   int  * op; /* execution options            */
 
    struct CMPTKGCONTEXT * ctx;     /* CMP TKG context      */
    long                   threadn; /* thread number        */

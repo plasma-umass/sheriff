@@ -90,18 +90,19 @@ public:
   enum { PROTECTEDHEAP_SIZE = 1048576UL * 8192 };
 #endif
   enum { SHAREDHEAP_SIZE = 1048576UL * 100 };
-#ifndef DETECT_FALSE_SHARING
+
+#if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
+  enum { PROTECTEDHEAP_CHUNK = 1048576 };
+  enum { LARGE_CHUNK = 1024 };
+  enum { EVAL_LARGE_HEAP_BASE = 1000 };
+  enum { EVAL_LARGE_HEAP_PROTECTION = 1000 }; 
+#else
   enum { PROTECTEDHEAP_CHUNK = 40960 };
   enum { SHAREDHEAP_CHUNK = 1048576};
   enum { LARGE_CHUNK = 1024 };
   enum { EVAL_TRANS_PER_THREAD = 2 }; // Evaluate whether we need to separate memory.
   enum { EVAL_TOTAL_TRANS = 8 };
   enum { EVAL_LEAST_INVALIDATES = 1000 };
-#else
-  enum { PROTECTEDHEAP_CHUNK = 1048576 };
-  enum { LARGE_CHUNK = 1024 };
-  enum { EVAL_LARGE_HEAP_BASE = 1000 };
-  enum { EVAL_LARGE_HEAP_PROTECTION = 1000 }; 
 #endif
 
   enum { EVAL_CHECKING_PERIOD = 20 };

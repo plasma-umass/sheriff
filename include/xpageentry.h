@@ -24,7 +24,7 @@
  * for one process only, memory can be allocated from private heap.
  */
 class xpageentry {
-#ifdef DETECT_FALSE_SHARING
+#if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
 	enum {PAGE_ENTRY_NUM = 100000 };
 #else
 	enum {PAGE_ENTRY_NUM = 5120 };

@@ -29,7 +29,7 @@
  * @author Tongping Liu <http://www.cs.umass.edu/~tonyliu>
  */
 
-#ifdef DETECT_FALSE_SHARING
+#if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
 #include "callsite.h"
 #endif
 
@@ -45,7 +45,7 @@ public:
 
   size_t getSize () { sanityCheck(); return _size; }
 
-#ifdef DETECT_FALSE_SHARING
+#if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
 
   int getCallsiteLength() const {
     return sizeof(CallSite);
@@ -103,7 +103,7 @@ private:
 
   size_t _magic;
   size_t _size;
-#ifdef DETECT_FALSE_SHARING
+#if defined(DETECT_FALSE_SHARING) || defined(DETECT_FALSE_SHARING_OPT)
   CallSite _callsites;
 #endif
 };

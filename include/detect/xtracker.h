@@ -105,18 +105,20 @@ public:
       if(object.interwrites < xdefines::MIN_INTERWRITES_OUTPUT) {
         continue;
       }
-      fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual line(s), object writes = %d)\n\tObject start = %lx; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
+      //fprintf(stderr, "Object %d: cache interleaving writes %d (%d per cache line, %d times on %d actual line(s), object writes = %d)\n\tObject start = %lx; length = %d.\n", k, object.interwrites, object.interwrites/object.lines, object.interwrites/object.actuallines, object.actuallines, object.totalwrites, object.start, object.totallength);
+      
+      fprintf(stderr, "Object %d: cache interleaving writes %d on %d cache lines:\n  Object start = %lx; length = %d.\n", k, object.interwrites, object.actuallines, object.start, object.totallength);
       if (object.is_heap_object == true) {
       //  fprintf(stderr, "\tHeap object accumulated by %d, unit length = %d, total length = %d, cache lines = %d.\n", object.times, object.unitlength, object.totallength, object.totallength/xdefines::CACHE_LINE_SIZE);
 
         // Print callsite information.
-	fprintf (stderr, "Object allocation call site information:\n");
+	      fprintf (stderr, "    Object allocation call site information:\n");
         CallSite * callsite = (CallSite *) &object.callsite[0];
         for(int j = 0; j < callsite->getDepth(); j++) {
           unsigned long ipaddr = callsite->getItem(j);
           char command[MAXBUFSIZE];
             
-         fprintf(stderr, "Call site %d %lx: ", j, ipaddr);
+         fprintf(stderr, "\tCall site %d %lx: ", j, ipaddr);
           if(ipaddr >= textStart && ipaddr <= textEnd) {
             sprintf(command, "%s %x", base, ipaddr);
             system(command);

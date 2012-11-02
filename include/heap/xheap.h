@@ -30,8 +30,12 @@
 #ifndef SHERIFF_XHEAP_H
 #define SHERIFF_XHEAP_H
 
-#include "xpersist.h"
 #include "xdefines.h"
+#if defined(DETECT_FALSE_SHARING)
+#include "xpersist.h"
+#else
+#include "xpersist_opt.h"
+#endif
 
 template <unsigned long Size>
 class xheap : public xpersist<char,Size>

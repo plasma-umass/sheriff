@@ -19,8 +19,11 @@
 
 #include "xdefines.h"
 #include "internalheap.h"
+#if defined(DETECT_FALSE_SHARING)
 #include "xmemory.h"
-
+#else
+#include "xmemory_opt.h"
+#endif
 /**
  * @class xbarrier
  * @brief Manage the cross-process barrier.
