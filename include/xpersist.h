@@ -496,9 +496,10 @@ public:
       // If the last thread to invalidate cache is not current thread, then we will update global
       // counter about invalidate numbers.
       atomic::increment(&_cacheInvalidates[cacheNo]);
-     // fprintf(stderr, "Record cache invalidates %p with interleavings %d\n", &_cacheInvalidates[cacheNo], _cacheInvalidates[cacheNo]);
+      //fprintf(stderr, "Record cache invalidates %p with interleavings %d cacheNo %d\n", &_cacheInvalidates[cacheNo], _cacheInvalidates[cacheNo], cacheNo);
       interleaving = 1;
     }
+    //fprintf(stderr, "%d :cacheinterleaves %d\n", getpid(), interleaving); 
     return interleaving;
   }
   
@@ -539,12 +540,12 @@ public:
         int lastTid;
     
         // Calculate the cache number for current words.  
-        cacheNo = i >> 4;
+        cacheNo = calcCacheNo(i);
         
         // We will update corresponding cache invalidates.
         if(cacheNo != recordedCacheNo) {
-          interWrites += recordCacheInvalidates(pageinfo->pageNo, 
-                            pageinfo->pageNo*xdefines::CACHES_PER_PAGE + cacheNo);
+          recordCacheInvalidates(pageinfo->pageNo, 
+                       pageinfo->pageNo*xdefines::CACHES_PER_PAGE + cacheNo);
           recordedCacheNo = cacheNo;
         }
         
@@ -598,7 +599,8 @@ public:
       if(mylocal[i] != mytwin[i]) {
           //if(mytwin[i] != mydest[i] && mylocal[i] != mydest[i])
           //fprintf(stderr, "%d: RACE at %p from %x to %x (dest %x). pageno %d\n", getpid(), &mylocal[i], mytwin[i], mylocal[i], mydest[i], pageno);
-        mydest[i] = mylocal[i];
+    //    mydest[i] = mylocal[i];
+        checkCommitWord(mylocal, mytwin, mydest);
       }
     }
 
@@ -607,12 +609,14 @@ public:
 
   inline void checkCommitWord(char * local, char * twin, char * share) {
     int i = 0;
+    //fprintf(stderr, "%d: local %lx twin %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)twin), *((unsigned long *)share));
     while(i < sizeof(unsigned long)) {
       if(local[i] != twin[i]) {
         share[i] = local[i];
       }
       i++;
     }
+  //  fprintf(stderr, "after commit %d: local %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)share));
   }
 
   inline void recordWordChanges(void * addr, unsigned long changes) {
@@ -633,6 +637,10 @@ public:
     word->version += changes;
   }
 
+  int calcCacheNo(unsigned long words) {
+    return (words * sizeof(unsigned long))/xdefines::CACHE_LINE_SIZE;
+  }
+
   // Normal commit procedure. All local modifications should be commmitted to the shared mapping so
   // that other threads can see this change. 
   // Also, all wordChanges has be integrated to the global place too.
@@ -648,6 +656,7 @@ public:
     unsigned long cacheNo;
     unsigned long interWrites = 0;
 
+    //fprintf(stderr, "%d: pageStart %p twin %p\n", getpid(), local, twin);
     // Now we have the temporary twin page and original twin page.
     // We always commit those changes against the original twin page.
     // But we need to capture the changes since last period by checking against 
@@ -666,16 +675,16 @@ public:
       // Now there are some changes, at least we must commit the word.
       if(local[i] != tempTwin[i]) {
         // Calculate the cache number for current words.    
-        cacheNo = i >> 4;
+        cacheNo = calcCacheNo(i);
 
         // We will update corresponding cache invalidates.
         if(cacheNo != recordedCacheNo) {
-          interWrites += recordCacheInvalidates(pageinfo->pageNo, 
+          recordCacheInvalidates(pageinfo->pageNo, 
                           pageinfo->pageNo*xdefines::CACHES_PER_PAGE + cacheNo);
 
           recordedCacheNo = cacheNo;
         }
-
+        
         recordWordChanges((void *)&globalChanges[i], localChanges[i] + 1);
       }
       else {
@@ -683,6 +692,7 @@ public:
       }
 
       // Now we are doing a byte-by-byte based commit
+      //share[i] = local[i];
       checkCommitWord((char *)&local[i], (char *)&twin[i], (char *)&share[i]);
     }
   }

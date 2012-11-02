@@ -358,10 +358,12 @@ public:
     }
   }
 
-  long getCacheInvalidates(long cacheStart, long lines, unsigned long * cacheInvalidates, long * actuallines){
+  long getCacheInvalidates(int cacheStart, long lines, unsigned long * cacheInvalidates, long * actuallines){
     long writes = 0;
+    //fprintf(stderr, "Now check start %p cacheStart %ld line %ld\n", cacheInvalidates, cacheStart, lines);
     for(long i = 0; i < lines; i++) {
       writes += cacheInvalidates[cacheStart + i];
+      //fprintf(stderr, "Now i %d check cacheInvalidates at %p\n", i, &cacheInvalidates[cacheStart+i]);
       if(cacheInvalidates[cacheStart + i] > 1) {
         (*actuallines)++;
       } 
@@ -474,7 +476,7 @@ public:
     while(pos < memend) {
       if(*pos == objectHeader::MAGIC) {
         objectHeader * object = (objectHeader *)pos;
-        int * objectStart = (int *)&object[1];
+        int *  objectStart = (int *)&object[1];
         long   objectOffset = (intptr_t)objectStart - (intptr_t)memstart;
         long   writes;
         long   cacheStart = objectOffset/xdefines::CACHE_LINE_SIZE;
@@ -564,7 +566,8 @@ public:
       long lines = getCachelines(objectStart, symbol->st_size);
       long actuallines = 0;
       long interwrites = getCacheInvalidates(objectOffset/xdefines::CACHE_LINE_SIZE, lines, cacheInvalidates, &actuallines);
-    
+   
+      //fprintf(stderr, "memBase %p cacheInvalidates %p, start %lx size %d, Now lines %d global with interwrites %d\n", memBase, cacheInvalidates, objectStart, objectSize, lines, interwrites); 
       long totalwrites = getObjectWrites((int *)objectStart, (int *)(objectStart + objectSize), memBase, wordchange);
       // For globals, only when we need to output this object then we need to store that.
       // Since there is no accumulation for global objects.

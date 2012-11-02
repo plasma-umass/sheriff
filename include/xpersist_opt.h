@@ -645,7 +645,7 @@ public:
         int lastTid;
     
         // Calculate the cache number for current words.  
-        cacheNo = i >> 4;
+        cacheNo = calcCacheNo(i);
         
         // We will update corresponding cache invalidates.
         if(cacheNo != recordedCacheNo) {
@@ -753,6 +753,10 @@ public:
     word->version += changes;
   }
 
+  int calcCacheNo(unsigned long words) {
+    return (words * sizeof(unsigned long))/xdefines::CACHE_LINE_SIZE;
+  }
+
   // Normal commit procedure. All local modifications should be commmitted to the shared mapping so
   // that other threads can see this change. 
   inline void checkcommitpage(struct pageinfo * pageinfo) {
@@ -775,7 +779,7 @@ public:
       for (int i = 0; i < xdefines::PageSize/sizeof(unsigned long); i++) {
         if(local[i] != twin[i]) {
           // Calculate the cache number for current words.    
-          cacheNo = i >> 4;
+          cacheNo = calcCacheNo(i);
 
           // We will update corresponding cache invalidates.
           if(cacheNo != recordedCacheNo) {
@@ -807,7 +811,7 @@ public:
         // Here, we find some modification. 
         if(local[i] != tempTwin[i]) {
           // Calculate the cache number for current words.    
-          cacheNo = i >> 4;
+          cacheNo = calcCacheNo(i);
 
           // We will update corresponding cache invalidates.
           if(cacheNo != recordedCacheNo) {
