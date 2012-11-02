@@ -1,5 +1,5 @@
 // g++ -g falsesharing.cpp -rdynamic ../libsheriff_protect64.so
-
+#include <stdio.h>
 #include <pthread.h>
 
 #include <iostream>

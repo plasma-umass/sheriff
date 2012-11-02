@@ -518,7 +518,8 @@ public:
           objectinfo.unitlength = unitsize;
           objectinfo.lines = lines;
           objectinfo.actuallines = actuallines;
-          objectinfo.totallength = (intptr_t)nextobject - (intptr_t)objectStart;
+          objectinfo.totallength = unitsize;
+          //objectinfo.totallength = (intptr_t)nextobject - (intptr_t)objectStart;
           objectinfo.start = (unsigned long *)&object[1];
        
            objectinfo.stop = (unsigned long *)nextobject;
