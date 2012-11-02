@@ -46,7 +46,7 @@ void xthread::join (xrun * runner,
   int status;
   waitpid(t->tid, &status, 0);
 
-  //while(1) ;  
+  runner->atomicBegin(false, false);
 #if 0
   while(!WIFEXITED(status)) {
   //  fprintf(stderr, "%d: Now waitAGAIN!!!!!\n", getpid());
@@ -54,8 +54,6 @@ void xthread::join (xrun * runner,
   } 
 #endif
  
-//  fprintf(stderr, "%d: joining thread %d after waiting\n", getpid(), t->tid);
-  //while(1) ;
   // Grab the thread result from the status structure (set by the thread),
   // reclaim the memory, and return that result.
   if (result != NULL) {
@@ -70,13 +68,13 @@ void xthread::join (xrun * runner,
   if(getpid() == runner->main_id()) {
 	// Check whether main thread is the only alive one. If it is, we maybe don't 
     // need protection anymore.
-	if(waitpid(-1, NULL, WNOHANG) == -1 && errno == ECHILD) {
-		runner->closeMemoryProtection();
-		runner->resetThreadIndex();
-		_protected = false;
+	  if(waitpid(-1, NULL, WNOHANG) == -1 && errno == ECHILD) {
+		  runner->closeMemoryProtection();
+		  runner->resetThreadIndex();
+		  _protected = false;
 		//fprintf(stderr, "return %d and errno %s", ret, strerror(errno));
 	    return;
-	}
+	  }
   }
 
   runner->atomicBegin(false, false);

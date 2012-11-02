@@ -8,7 +8,7 @@ using namespace std;
 enum { MAX_THREADS = 8 };
 //enum { NUM_ITERATIONS = 800000000 };
 //enum { NUM_ITERATIONS = 800000000 };
-enum { NUM_ITERATIONS = 80000000 };
+enum { NUM_ITERATIONS = 800000000 };
 //enum { NUM_ITERATIONS = 80000 };
 
 class Item {
@@ -16,8 +16,8 @@ public:
   volatile int x[MAX_THREADS];
 };
 
-//#define SHARE_HEAP_OBJECT 0
-#define SHARE_HEAP_OBJECT 1
+#define SHARE_HEAP_OBJECT 0
+//#define SHARE_HEAP_OBJECT 1
 
 #if SHARE_HEAP_OBJECT
 Item * theItem;
@@ -39,7 +39,11 @@ void * worker (void * v) {
 //    usleep(1);
   }
   //while(1);
-  fprintf(stderr, "%d: in worker %d done\n", getpid(), index);
+#if SHARE_HEAP_OBJECT
+    fprintf(stderr, "%d: in worker %d done with item %d\n", getpid(), index, theItem->x[index]);
+#else
+    fprintf(stderr, "%d: in worker %d done with item %d\n", getpid(), index, monkey.x[index]);
+#endif
 
   return NULL;
 }
@@ -62,6 +66,13 @@ main()
 #else 
   fprintf(stderr, "theItem is at %p\n", &monkey);
 #endif
+  for (int i = 0; i < 8; i++) {
+#if SHARE_HEAP_OBJECT
+    fprintf(stderr, "theItem[%d] is  %lx\n", i, theItem->x[i]);
+#else
+    fprintf(stderr, "theItem[%d] is  %d\n", i, monkey.x[i]);
+#endif
+  }
 
   for (int i = 0; i < 8; i++) {
     pthread_create (&thread[i], NULL, worker, (void *) i);
@@ -75,7 +86,7 @@ main()
 
   for (int i = 0; i < 8; i++) {
 #if SHARE_HEAP_OBJECT
-    fprintf(stderr, "theItem[%d] is  %d\n", i, theItem->x[i]);
+    fprintf(stderr, "theItem[%d] is  %lx\n", i, theItem->x[i]);
 #else
     fprintf(stderr, "theItem[%d] is  %d\n", i, monkey.x[i]);
 #endif

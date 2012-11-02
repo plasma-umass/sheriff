@@ -8,10 +8,12 @@ SRCS =  $(SOURCE_DIR)/libsheriff.cpp \
 	$(SOURCE_DIR)/finetime.c     \
 	$(SOURCE_DIR)/gnuwrapper.cpp
 
-INCS =  $(INCLUDE_DIR)/xpersist.h     \
-        $(INCLUDE_DIR)/xdefines.h     \
-	$(INCLUDE_DIR)/xglobals.h     \
+INCS =  $(INCLUDE_DIR)/xglobals.h     \
+  $(INCLUDE_DIR)/xdefines.h     \
+	$(INCLUDE_DIR)/xpersist.h     \
 	$(INCLUDE_DIR)/xmemory.h      \
+	$(INCLUDE_DIR)/xpersist_opt.h     \
+	$(INCLUDE_DIR)/xmemory_opt.h      \
 	$(INCLUDE_DIR)/xpageinfo.h    \
 	$(INCLUDE_DIR)/xpageprof.h    \
 	$(INCLUDE_DIR)/xpagestore.h   \
@@ -57,7 +59,7 @@ INCLUDE_DIRS = -I. -I./heaplayers -I./heaplayers/util
 
 #GET_CHARACTERISTICS
 
-TARGETS = libsheriff_protect32.so libsheriff_detect32.so libsheriff_protect64.so libsheriff_detect64.so
+TARGETS = libsheriff_protect32.so libsheriff_detect32.so libsheriff_protect64.so libsheriff_detect64.so libsheriff_detect32_opt.so libsheriff_detect64_opt.so
 
 all: $(TARGETS)
 
@@ -67,11 +69,17 @@ libsheriff_protect32.so: $(DEPS)
 libsheriff_detect32.so: $(DEPS)
 	$(CXX) -DDETECT_FALSE_SHARING $(CFLAGS32) $(INCLUDE_DIRS) -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x'  $(SRCS) -o libsheriff_detect32.so  -ldl -lpthread
 
+libsheriff_detect32_opt.so: $(DEPS)
+	$(CXX) -DDETECT_FALSE_SHARING_OPT $(CFLAGS32) $(INCLUDE_DIRS) -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x'  $(SRCS) -o libsheriff_detect32_opt.so  -ldl -lpthread
+
 libsheriff_protect64.so: $(DEPS)
 	$(CXX) $(CFLAGS64) $(INCLUDE_DIRS) -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x' $(SRCS) -o libsheriff_protect64.so  -ldl -lpthread
 
 libsheriff_detect64.so: $(DEPS)
 	$(CXX) -DDETECT_FALSE_SHARING $(CFLAGS64) $(INCLUDE_DIRS) -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x'  $(SRCS) -o libsheriff_detect64.so  -ldl -lpthread
+
+libsheriff_detect64_opt.so: $(DEPS)
+	$(CXX) -DDETECT_FALSE_SHARING_OPT $(CFLAGS64) $(INCLUDE_DIRS) -shared -fPIC -D'CUSTOM_PREFIX(x)=sheriff_##x'  $(SRCS) -o libsheriff_detect64_opt.so  -ldl -lpthread
 
 clean:
 	rm -f $(TARGETS)
