@@ -129,6 +129,7 @@ public:
 #ifndef NDEBUG
     //fprintf (stderr, "transient = %p, persistent = %p, size = %lx\n", _transientMemory, _persistentMemory, NElts * sizeof(Type));
 #endif
+   // fprintf (stderr, "transient = %p, persistent = %p\n", _transientMemory, _persistentMemory);
 
     _cacheLastthread = (unsigned long *)
       MM::allocateShared (TotalCacheNums * sizeof(unsigned long));
@@ -141,9 +142,11 @@ public:
     _pageUsers = (unsigned long *)
       MM::allocateShared (TotalPageNums * sizeof(unsigned long));
 
-    // This is used to save all wordchange information about one page. 
+    // This is used to save all wordchange information about all words.
+    // Here, we are trying to allocate the same size as transientMemory.
+    // But they won't actually use that much of physical memory. 
     _wordChanges = (wordchangeinfo *)
-      MM::allocateShared (TotalWordNums * sizeof(wordchangeinfo));
+      MM::allocateShared (NElts * sizeof(Type));
 
     if ((_transientMemory == MAP_FAILED) ||
 	      (_persistentMemory == MAP_FAILED) ) {
@@ -155,7 +158,7 @@ public:
     if(_isHeap) {
       xheapcleanup::getInstance().storeProtectHeapInfo
 	                ((void *)_transientMemory, size(),
-	                (void *)_cacheInvalidates, (void *)_wordChanges);
+	                (void *)_cacheInvalidates, (void *)_cacheLastthread, (void *)_wordChanges);
     }
 
 #ifdef SSE_SUPPORT
@@ -179,13 +182,51 @@ public:
     _savedPagesList.clear();
   }
 
+  void printScopeInformation(unsigned long begin, unsigned long end) {
+    unsigned long offset = begin - (intptr_t)base();
+    int startCacheNo = offset/xdefines::CACHE_LINE_SIZE;
+    int cacheLines = (end - begin)/xdefines::CACHE_LINE_SIZE;
+    //if(cacheLines < 1)
+      cacheLines += 1;
+
+    wordchangeinfo * wordStart = (wordchangeinfo *)((intptr_t)_wordChanges + offset);
+
+    fprintf(stderr, "Printing word changes from %lx to %lx, cachelines %d, startCacheNo %d\n", begin, end, cacheLines, startCacheNo);
+    for(int i = 0; i < cacheLines; i++) {
+      // Caculate the first 
+      wordchangeinfo * word = (wordchangeinfo *)((intptr_t)wordStart + i * xdefines::CACHE_LINE_SIZE);
+      int cacheNo = startCacheNo+i;
+      if(_cacheInvalidates[cacheNo] > 0) {
+        fprintf(stderr, "addr %lx: changes %d times by thread %d. Cache invalidates %d with cacheNo %d\n", begin + xdefines::CACHE_LINE_SIZE * i, word->version, word->tid, _cacheInvalidates[cacheNo], cacheNo);
+       
+        // We may print specific word information in this cacheline
+        if(_cacheInvalidates[cacheNo] > 1) {
+          int j;
+
+          for(j = 0; j < (xdefines::CACHE_LINE_SIZE/sizeof(int)); j++) {
+            fprintf(stderr, "\taddr %lx (now %lx): changes %d times by thread %d\n", begin + xdefines::CACHE_LINE_SIZE * i + j * sizeof(int), *((int *)(begin + xdefines::CACHE_LINE_SIZE * i + j * sizeof(int))), word[j].version, word[j].tid);
+          }
+        }
+      }
+    }
+  }
+
   void finalize(void *end) {
-    //closeProtection();
-  #ifdef TRACK_ALL_WRITES
-    // We will check those memory writes from the beginning, if one callsite are captured to 
-    // have one bigger updates, then report that.
-    _tracker.checkWrites((int *)base(), size(),  _wordChanges); 
-  #endif
+ 
+    // Trying to print out some information about this block of memory.
+    // Only for debugging purpose. 
+    if(_isHeap) {
+#if !defined(X86_32BIT) 
+      //printScopeInformation(0x2aacbee54d80, 0x2aacbee54f80);
+     // printScopeInformation(0x2aacbee54140, 0x2aacbee54340);
+      //printScopeInformation(0x2aacbee538f8, 0x2aacbee54698);
+#endif
+     }
+     else {
+#if !defined(X86_32BIT) 
+     // printScopeInformation(0x6014c0, 0x6014f0);
+#endif
+     }
 
     if(!_isHeap) {
       _tracker.checkGlobalObjects(_cacheInvalidates, (int *)base(), size(), _wordChanges); 
@@ -199,7 +240,6 @@ public:
       _tracker.print_objects_info();
     }
   }
-
 
   void sharemem_write_word(void * addr, unsigned long val) {
     unsigned long offset = (intptr_t)addr - (intptr_t)base();
@@ -238,8 +278,7 @@ public:
                  sharedInfo, _backingFd, offset);
   }
   
-  
-  void* mmapRdPrivate(void * start, unsigned long size) {
+  void* mmapRdPrivate(void * start, size_t size) {
     void * ptr;
     // Map to readonly private area.
     ptr = changeMappingToPrivate(PROT_READ, start, size); 
@@ -278,7 +317,7 @@ public:
   }
 
   /// Set a block of memory to Readable/Writable and shared. 
-  void *mmapRwShared(void * start, unsigned long size) {
+  void *mmapRwShared(void * start, size_t size) {
     void * ptr;
 
     // Map to writable share area. 
@@ -334,8 +373,8 @@ public:
       _cacheInvalidates[i] = 0; 
     } 
   
-    // Cleanup the wordChanges
-    void * wordptr = (void *)&_wordChanges[offset/sizeof(unsigned long)];
+    // Cleanup corresponding wordChanges information.
+    void * wordptr = (void *)((intptr_t)_wordChanges + offset);
     memset(wordptr, 0, sz);
   
     return true;
@@ -351,14 +390,13 @@ public:
     }
   }
 
-
   /// @return the start of the memory region being managed.
   inline Type * base (void) const {
     return _transientMemory;
   }
 
   /// @return the size in bytes of the underlying object.
-  inline unsigned long size (void) const {
+  inline size_t size (void) const {
     if(_isHeap) 
       return NElts * sizeof(Type);
     else
@@ -404,7 +442,7 @@ public:
                     "m"(pageStart[0])
                   : "memory");
  #else
-    asm volatile ("mov %0, %1 \n\t"
+    asm volatile ("movq %0, %1 \n\t"
                   :   // Output, no output 
                   : "r"(pageStart[0]),  // Input 
                     "m"(pageStart[0])
@@ -491,7 +529,8 @@ public:
     // Try to check the global array about cache last thread id.
     lastTid = atomic::exchange(&_cacheLastthread[cacheNo], myTid);
 
-    //fprintf(stderr, "Record cache interleavings, lastTid %d and myTid %d\n", lastTid, myTid);
+    //if(cacheNo == 4195014)
+    //  fprintf(stderr, "CacheNo %d at %lx: lastTid %d and myTid %d, interleavings %d\n", cacheNo, (intptr_t)base() + xdefines::CACHE_LINE_SIZE * cacheNo, lastTid, myTid, _cacheInvalidates[cacheNo]);
     if(lastTid != 0 && lastTid != myTid) {
       // If the last thread to invalidate cache is not current thread, then we will update global
       // counter about invalidate numbers.
@@ -503,39 +542,30 @@ public:
     return interleaving;
   }
   
-  // Record changes for those shared pages and update those temporary pages.
+  // Record changes for those shared pages and update those temporary pages, 
+  // This is done only in the periodic checking phase.
   inline void recordChangesAndUpdate(struct pageinfo * pageinfo, bool createTempPage) {
     int myTid = getpid();
-    unsigned long * local = (unsigned long *)pageinfo->pageStart;
+    int * local = (int *)pageinfo->pageStart;
     //printf("%d: before record on pageNo %d createTempPage %d\n", getpid(), pageinfo->pageNo, createTempPage);
-
-    // Which twin page should we compared this time. 
-    unsigned long * twin;
-  
     if(createTempPage) {
-      // Compare the original twin page with local copy
-      twin = (unsigned long *)pageinfo->origTwinPage;
-   
-      // We copy the page from the working copy
-      memcpy(twin, local, xdefines::PageSize);
+      // Create the temporary twin page from the local page.
+      memcpy(pageinfo->tempTwinPage, pageinfo->origTwinPage, xdefines::PageSize);
     }
-    else {
-      // Compare the temporary twin page with local copy
-      twin = (unsigned long *)pageinfo->tempTwinPage;
-    }
-  
+      
+    int * twin = (int *)pageinfo->tempTwinPage;
+    
     //printf("%d: record on pageNo %d createTempPage %d\n", getpid(), pageinfo->pageNo, createTempPage);
- 
-    unsigned long * wordChanges;
-    unsigned long interWrites = 0;
-    wordChanges = (unsigned long *)pageinfo->wordChanges;
+    int * wordChanges;
+    int interWrites = 0;
+    wordChanges = (int *)pageinfo->wordChanges;
   
     // We will check those modifications by comparing "local" and "twin".
-    unsigned long cacheNo;
+    int cacheNo;
     int startCacheNo = pageinfo->pageNo*xdefines::CACHES_PER_PAGE;
-    unsigned long recordedCacheNo = 0xFFFFFFFF;
+    int recordedCacheNo = 0xFFFFFF00;
 
-    for(int i = 0; i < xdefines::PageSize/sizeof(unsigned long); i++) {
+    for(int i = 0; i < xdefines::PageSize/sizeof(int); i++) {
       if(local[i] != twin[i]) {
         int lastTid;
     
@@ -551,10 +581,8 @@ public:
         
         // Update words on twin page if we are comparing against temporary twin page.
         // We can't update the original twin page!!! That is a bug.
-        if(createTempPage == false) {
-          twin[i] = local[i];
-        }
-        
+        twin[i] = local[i];
+       
         // Record changes for words in this cache line.
         wordChanges[i]++; 
       }   
@@ -619,40 +647,50 @@ public:
   //  fprintf(stderr, "after commit %d: local %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)share));
   }
 
-  inline void recordWordChanges(void * addr, unsigned long changes) {
+  inline void recordWordChanges(void * addr, int changes) {
     wordchangeinfo * word = (wordchangeinfo *)addr;
     unsigned short tid = word->tid;
-  
+    unsigned long wordAddr = ((intptr_t)addr - (intptr_t)_wordChanges)+(intptr_t)base();  
+
     int mine = getpid();
   
     // If this word is not shared, we should set to current thread.
     if(tid == 0) {
       word->tid = mine;
+      word->version = 0;
     }
     else if (tid != 0 && tid != mine && tid != 0xFFFF) {
       // This word is shared by different threads. Set to 0xFFFF.
+#ifndef X86_32BIT
+      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
+      fprintf(stderr, "wordAddr %lx (%lx): original tid %d now tid %d, version %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), tid, mine, word->version, changes);
+#endif
       word->tid = 0xFFFF;
     }
   
+#ifndef X86_32BIT
+      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
+      fprintf(stderr, "wordAddr %lx (%lx): original tid %d now tid %d, version %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), tid, mine, word->version, changes);
+#endif
     word->version += changes;
   }
 
-  int calcCacheNo(unsigned long words) {
-    return (words * sizeof(unsigned long))/xdefines::CACHE_LINE_SIZE;
+  int calcCacheNo(int words) {
+    return (words * sizeof(unsigned int))/xdefines::CACHE_LINE_SIZE;
   }
 
   // Normal commit procedure. All local modifications should be commmitted to the shared mapping so
   // that other threads can see this change. 
   // Also, all wordChanges has be integrated to the global place too.
   inline void checkcommitpage(struct pageinfo * pageinfo) {
-    unsigned long * twin = (unsigned long *) pageinfo->origTwinPage;
-    unsigned long * local = (unsigned long *) pageinfo->pageStart; 
-    unsigned long * share = (unsigned long *) ((intptr_t)_persistentMemory + xdefines::PageSize * pageinfo->pageNo);
-    unsigned long * tempTwin = (unsigned long *) pageinfo->tempTwinPage;
-    unsigned long * localChanges = (unsigned long *) pageinfo->wordChanges;
+    int * twin = (int *) pageinfo->origTwinPage;
+    int * local = (int *) pageinfo->pageStart; 
+    int * share = (int *) ((intptr_t)_persistentMemory + xdefines::PageSize * pageinfo->pageNo);
+    int * tempTwin = (int *) pageinfo->tempTwinPage;
+    int * localChanges = (int *) pageinfo->wordChanges;
     // Here we assume sizeof(unsigned long) == 2 * sizeof(unsigned short);
-    unsigned long * globalChanges = (unsigned long *)((unsigned long)_wordChanges + xdefines::PageSize * pageinfo->pageNo);
-    unsigned long recordedCacheNo = 0xFFFFFFFF;
+    int * globalChanges = (int *)((intptr_t)_wordChanges + xdefines::PageSize * pageinfo->pageNo);
+    unsigned long recordedCacheNo = 0xFFFFFF00;
     unsigned long cacheNo;
     unsigned long interWrites = 0;
 
@@ -661,16 +699,17 @@ public:
     // We always commit those changes against the original twin page.
     // But we need to capture the changes since last period by checking against 
     // the temporary twin page.  
-    for (int i = 0; i < xdefines::PageSize/sizeof(unsigned long); i++) {
+    for (int i = 0; i < xdefines::PageSize/sizeof(int); i++) {
       if(local[i] == twin[i]) {
         if(localChanges[i] != 0) {
-          //fprintf(stderr, "detect the ABA changes %d\n", localChanges[i]);
+          //fprintf(stderr, "detect the ABA changes %d, local %x temptwin %x\n", localChanges[i], local[i], tempTwin[i]);
           recordWordChanges((void *)&globalChanges[i], localChanges[i]);
         }
         // It is very unlikely that we have ABA changes, so we don't check
         // against temporary twin page now.
         continue;
       }
+      unsigned long wordAddr = (intptr_t)&local[i];
 
       // Now there are some changes, at least we must commit the word.
       if(local[i] != tempTwin[i]) {
@@ -685,14 +724,22 @@ public:
           recordedCacheNo = cacheNo;
         }
         
+#ifndef X86_32BIT
+      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
+      fprintf(stderr, "wordAddr %lx (%lx): tid %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), getpid(), localChanges[i]);
+#endif
+        
         recordWordChanges((void *)&globalChanges[i], localChanges[i] + 1);
       }
       else {
+#ifndef X86_32BIT
+      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
+      fprintf(stderr, "wordAddr %lx (%lx): tid %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), getpid(), localChanges[i]);
+#endif
         recordWordChanges((void *)&globalChanges[i], localChanges[i]);
       }
 
       // Now we are doing a byte-by-byte based commit
-      //share[i] = local[i];
       checkCommitWord((char *)&local[i], (char *)&twin[i], (char *)&share[i]);
     }
   }
@@ -718,7 +765,7 @@ public:
     int    batchedPages = 0;
     
     // We are setting lastpage to a impossible page no at first.
-    unsigned int lastpage = 0xFFFFFFF0;
+    unsigned int lastpage = 0xFFFFFF00;
     struct pageinfo * pageinfo;
 
     // Check every pages in the private pages list.
@@ -780,9 +827,10 @@ public:
  
       // If a page is shared and there are some wordChanges information,
       // We should commit the changes and update wordChanges information too.
-      if((pageinfo->shared == true) && (pageinfo->alloced == true)) { 
+      //if((pageinfo->shared == true) && (pageinfo->alloced == true)) { 
+      if(pageinfo->alloced == true) { 
         checkcommitpage(pageinfo);
-        //fprintf(stderr, "%d COMMIT: finish on page %d\n", getpid(), pageNo);
+ //       fprintf(stderr, "%d COMMIT: finish on page %d\n", getpid(), pageNo);
       }
       else {
         // Commit those changes by checking the original twin page.
@@ -853,10 +901,10 @@ private:
   // Last thread to modify current cache
   unsigned long * _cacheLastthread;
 
+#if defined(SSE_SUPPORT)
   // A string of one bits.
   __m128i allones;
-  
-  enum { TotalWordNums = NElts * sizeof(Type)/sizeof(unsigned long) };
+#endif
   
   // In order to save space, we will use the higher 16 bit to store the thread id
   // and use the lower 16 bit to store versions.

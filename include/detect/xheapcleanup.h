@@ -55,44 +55,63 @@ public:
     return *theOneTrueObject;
   }
 
-	void storeProtectHeapInfo(void * start, int size, void * cacheInvalidate, void * wordChange) {
+	void storeProtectHeapInfo(void * start, int size, void * cacheInvalidate, void * cacheLastWriter, void * wordChange) {
 		_heapStart = start;
 		_heapSize = size;
 		_cacheInvalidates = (unsigned long *)cacheInvalidate;
+		_cacheLastThread = (unsigned long *)cacheLastWriter;
 		_wordChanges = (unsigned long *)wordChange;
 	}
 
 
 	// Cleanup those counter information of one heap object.
-  bool cleanupHeapObject(void * ptr, size_t sz) {
+  bool cleanupHeapObject(void * ptr, size_t sz, bool sameCallsite) {
     long offset;
     int cachelines;
     int index;
 
-    if(inRange(ptr) == false) {
-      return true;
-    }
-
     offset = (intptr_t)ptr - (intptr_t)base();
     index = offset/xdefines::CACHE_LINE_SIZE;
 
+    //fprintf(stderr, "cleanupheap ptr %p with sameCallsite %d\n", ptr, sameCallsite);
     // At least we will check one cache line.
     cachelines = sz/xdefines::CACHE_LINE_SIZE;
     if(cachelines == 0)
       cachelines = 1;
 
     // Cleanup the cacheinvalidates that are involved in this object.
-    for(int i = index; i < index+cachelines; i++) {
-      if(_cacheInvalidates[i] >= xdefines::MIN_INVALIDATES_CARE) {
+    if(!sameCallsite) {
+      // If we are allocate on a new project, if the existing object has some 
+      // interleaving writes, then we must choose a different object. 
+      for(int i = index; i < index+cachelines; i++) {
+        if(_cacheInvalidates[i] >= xdefines::MIN_INVALIDATES_CARE) {
           return false;
+        }
+        // We don't need atomic operation here.
+        _cacheInvalidates[i] = 0;
       }
-      // We don't need atomic operation here.
-      _cacheInvalidates[i] = 0;
+    
+      // Cleanup the wordChanges 
+      void * wordptr = (void *)&_wordChanges[(offset-sizeof(objectHeader))/sizeof(unsigned long)];
+      memset(wordptr, 0, sz);
     }
-
-    // Cleanup the wordChanges 
-    void * wordptr = (void *)&_wordChanges[(offset-sizeof(objectHeader))/sizeof(unsigned long)];
-    memset(wordptr, 0, sz);
+    else {
+//    fprintf(stderr, "now cleanupheap ptr %p with sameCallsite %d\n", ptr, sameCallsite);
+      // If we reuse a existing callsite, then we must cleanup the last thread.
+      // Otherwise, it will introduce an invalid interleaving since it is possible
+      // that a new thread is working on the same object.
+      for(int i = index; i < index+cachelines; i++) {
+        if(_cacheInvalidates[i] >= xdefines::MIN_INVALIDATES_CARE) {
+          // We don't need to calculate the first interleaving since it is an
+          // unavoidable update. 
+ //         fprintf(stderr, "cacheline %d's invalidates %d lastthread %d\n", i, _cacheInvalidates[i], _cacheLastThread[i]);
+          _cacheInvalidates[i] -= 1;
+        }
+        // We are changing to 0, since it is a new object.
+        _cacheLastThread[i] = 0;
+        // We don't need atomic operation here.
+      } 
+    }
 	  return true;
   }
   	
@@ -119,6 +138,7 @@ private:
 	void * _heapStart;
 	int    _heapSize;
 	unsigned long * _cacheInvalidates;
+	unsigned long * _cacheLastThread;
 	unsigned long * _wordChanges;
 };
 

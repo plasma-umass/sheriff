@@ -195,6 +195,7 @@ public:
 	((void *)_transientMemory, 
 	 size(),
 	 (void *)_cacheInvalidates, 
+	 (void *)_cacheLastthread, 
 	 (void *)_wordChanges);
     }
 #endif
@@ -257,15 +258,6 @@ public:
   stats::getInstance().getTrans(), stats::getInstance().getDirtyPages(), stats::getInstance().getProtects(), stats::getInstance().getCaches());
 #endif
 #endif
-  }
-
- void printWordsChanges(unsigned long offset) {
-    unsigned long * start = (unsigned long *)((unsigned long)base() + offset);
-  
-    for(int i = 0; i < 16; i++) {
-      wordchangeinfo * word = &_wordChanges[offset/sizeof(unsigned long) + i];
-      fprintf(stderr, "addr %p - %x with changes %d times by thread %d\n", &start[i], start[i], word->version, word->tid);
-    }
   }
 
   void sharemem_write_word(void * addr, unsigned long val) {
@@ -417,7 +409,8 @@ public:
     if(inRange(ptr) == false) {
       return false;
     }
-    
+   
+    // Calculate the offset of this object. 
     offset = (int)ptr - (int)base();
     index = offset/xdefines::CACHE_LINE_SIZE;
   
@@ -436,7 +429,7 @@ public:
     } 
   
     // Cleanup the wordChanges
-    void * wordptr = (void *)&_wordChanges[offset/sizeof(unsigned long)];
+    void * wordptr = (void *)((intptr_t)_wordChanges + offset);
     memset(wordptr, 0, sz);
   
     return true;
@@ -766,7 +759,7 @@ public:
     unsigned long * share = (unsigned long *) ((intptr_t)_persistentMemory + xdefines::PageSize * pageinfo->pageNo);
     unsigned long * localChanges = (unsigned long *) pageinfo->wordChanges;
     // Here we assume sizeof(unsigned long) == 2 * sizeof(unsigned short);
-    unsigned long * globalChange = (unsigned long *)((unsigned long)_wordChanges + xdefines::PageSize * pageinfo->pageNo);
+    unsigned long * globalChange = (unsigned long *)((intptr_t)_wordChanges + xdefines::PageSize * pageinfo->pageNo);
     unsigned long recordedCacheNo = 0xFFFFFFFF;
     unsigned long cacheNo;
   #if defined(DETECT_FALSE_SHARING_OPT)

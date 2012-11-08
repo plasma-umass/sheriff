@@ -140,15 +140,17 @@ Remalloc_again:
 
     callsite.fetch(CALL_SITE_DEPTH);
 
+    bool sameCallsite = obj->sameCallsite(&callsite);
+    // Check whether current callsite is the same as before. If it is
     // Check whether current callsite is the same as before. If it is
     // not the same, we have to cleanup all information about the old
     // object to avoid false positives.
-    if(isProtected && !obj->sameCallsite(&callsite)) {
+    if(isProtected) {
       bool successCleanup;
 
       // When the orignal object should be reported, then we are forcing
       // the allocator to pickup another object.
-      successCleanup = xheapcleanup::getInstance().cleanupHeapObject(ptr, sz);
+      successCleanup = xheapcleanup::getInstance().cleanupHeapObject(ptr, sz, sameCallsite);
       if(successCleanup != true) {
         goto Remalloc_again;
       }

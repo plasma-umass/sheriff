@@ -122,26 +122,35 @@ Remalloc_again:
 
     callsite.fetch(CALL_SITE_DEPTH);
 
+    // Check whether this malloc are having the same callsite as the existing one.
+    bool sameCallsite = obj->sameCallsite(&callsite);
     // Check whether current callsite is the same as before. If it is
     // not the same, we have to cleanup all information about the old
     // object to avoid false positives.
-    if(isProtected && !obj->sameCallsite(&callsite)) {
+    //if(isProtected && !obj->sameCallsite(&callsite)) {
+    if(isProtected) {
       bool successCleanup;
+    
+     // fprintf(stderr, "Now malloc with ptr %p and size %d 2222!!!!\n", ptr, sz);   
 
       // When the orignal object should be reported, then we are forcing
       // the allocator to pickup another object.
-      successCleanup = xheapcleanup::getInstance().cleanupHeapObject(ptr, sz);
+      successCleanup = xheapcleanup::getInstance().cleanupHeapObject(ptr, sz, sameCallsite);
       if(successCleanup != true) {
+    //    fprintf(stderr, "Now malloc with ptr %p and size %d 3333!!!!\n", ptr, sz);   
         goto Remalloc_again;
       }
     
-      // Save the new callsite information.
-      obj->storeCallsite (callsite);
+      // Save the new callsite if it is a new callsite.
+      if(!sameCallsite) {
+        obj->storeCallsite (callsite);
+      }
     } else if (!isProtected) {
       // Save callsite to object header.
       obj->storeCallsite (callsite);
-    }
-  
+    } 
+
+    //fprintf(stderr, "Now malloc with ptr %p and size %d\n", ptr, sz);   
     return ptr;
   }
 
@@ -161,6 +170,8 @@ Remalloc_again:
 
   inline void free (void * ptr) {
     size_t s = getSize(ptr);
+
+    //printf("Now free ptr %p with size %d\n", ptr, s);
     _heap.free(_heapid, ptr);
   }
 

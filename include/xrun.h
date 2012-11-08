@@ -185,6 +185,7 @@ public:
 
   // In fact, we can delay to open its information about heap.
   inline void free (void * ptr) {
+    //fprintf(stderr, "Now free object at ptr %p\n", ptr);
     _memory.free (ptr);
   }
 

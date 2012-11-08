@@ -99,7 +99,7 @@ public:
 #else
   enum { PROTECTEDHEAP_CHUNK = 40960 };
   enum { SHAREDHEAP_CHUNK = 1048576};
-  enum { LARGE_CHUNK = 1024 };
+  enum { LARGE_CHUNK = 40960 };
   enum { EVAL_TRANS_PER_THREAD = 2 }; // Evaluate whether we need to separate memory.
   enum { EVAL_TOTAL_TRANS = 8 };
   enum { EVAL_LEAST_INVALIDATES = 1000 };
@@ -111,7 +111,8 @@ public:
   enum { PageSize = 4096UL };
   enum { PAGE_SIZE_MASK = (PageSize-1) };
   enum { NUM_HEAPS = 32 };
-  enum { PERIODIC_CHECKING_INTERVAL = 10000};
+  //enum { PERIODIC_CHECKING_INTERVAL = 10000};
+  enum { PERIODIC_CHECKING_INTERVAL = 1000};
   enum { CACHE_LINE_SIZE = 64};
   enum { CACHES_PER_PAGE = 64};
   enum { CACHELINE_SIZE_MASK = 0x3F};

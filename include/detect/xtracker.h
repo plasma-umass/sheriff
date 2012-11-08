@@ -342,15 +342,19 @@ public:
   
     int i = 0;
     pos = base;
-    end = (int *)((int)base + size);
-   
+    end = (int *)((intptr_t)base + size);
+  
+    fprintf(stderr, "Checking writes on %p\n", base); 
     while(pos < end) {
       // First, we should calculate the writes on this cacheline.   
       int writes = 0;
   
       writes = calcCacheWrites(&wordchange[pos-base], xdefines::CACHE_LINE_SIZE);
   
-      if(writes > xdefines::MIN_WRITES_CARE) {
+      fprintf(stderr, "%d: cache writes %d on %p\n", i++, writes, pos);
+   
+   //   if(writes > xdefines::MIN_WRITES_CARE) {
+      {
         fprintf(stderr, "%d: cache writes %d on %p\n", i++, writes, pos);
       }
   
@@ -358,6 +362,7 @@ public:
     }
   }
 
+  // Get how many cache invadidations happen for specified cache line. 
   long getCacheInvalidates(int cacheStart, long lines, unsigned long * cacheInvalidates, long * actuallines){
     long writes = 0;
     //fprintf(stderr, "Now check start %p cacheStart %ld line %ld\n", cacheInvalidates, cacheStart, lines);
@@ -472,33 +477,34 @@ public:
     int i;
   
     int * pos = memstart;
-  
+ 
     while(pos < memend) {
+      // We are tracking word-by-word to find the objec theader.  
       if(*pos == objectHeader::MAGIC) {
         objectHeader * object = (objectHeader *)pos;
-        int *  objectStart = (int *)&object[1];
-        long   objectOffset = (intptr_t)objectStart - (intptr_t)memstart;
-        long   writes;
-        long   cacheStart = objectOffset/xdefines::CACHE_LINE_SIZE;
-        long   unitsize = object->getSize();
+        unsigned long  objectStart = (unsigned long)&object[1];
+        unsigned long   objectOffset = objectStart - (intptr_t)memstart;
+        int   writes;
+        int   cacheStart = objectOffset/xdefines::CACHE_LINE_SIZE;
+        int   unitsize = object->getSize();
       
-  
         // Check the memory until we met a different callsite.
-        int * nextobject = getNextDiffObject((int *)((intptr_t)objectStart + object->getSize()), memend, object->getCallsiteRef(), object->getSize());
+        int * nextobject = getNextDiffObject((int *)(objectStart + object->getSize()), memend, object->getCallsiteRef(), object->getSize());
         
-        long   lines = getCachelines((intptr_t)objectStart, (intptr_t)nextobject - (intptr_t)objectStart);
-        long   actuallines = 0;
-  
+        // Calculate how many cache lines are occupied by this object.
+        int   lines = getCachelines(objectStart, unitsize);
+        long  actuallines = 0;
+ 
+        // Check whether there are some interleaving writes on this object. 
         writes = getCacheInvalidates(cacheStart, lines, cacheInvalidates, &actuallines);
 
-	// EDB: Disabled (does it serve any purpose beyond the report printed below?).
-
 #if 0
-        if(cacheInvalidates[cacheStart] > 20) {
+        if(writes > 5) {
           fprintf(stderr, "writes %ld on pos %p nextobject %p. lines %ld\n", writes, pos, nextobject, lines);
         } 
 #endif   
-   
+        // Whenever interleaved writes is larger than the specified threshold
+        // We are trying to report it. 
         if(writes > xdefines::MIN_INTERWRITES_CARE) {
           // Check whether the current object causes enough invalidations or not.
           // We only need to check two ends for continuous memory allocation for same callsite.
@@ -506,7 +512,7 @@ public:
           long objectwrites;
       
           // Check how many objects are located in the first cache line.
-          objectwrites = getObjectWrites(objectStart, nextobject, memstart, wordchange);
+          objectwrites = getObjectWrites((int *)objectStart, (int *)(objectStart+unitsize), memstart, wordchange);
   
           // Check how many objects are located in the last cache line.
           ObjectInfo objectinfo;
@@ -520,19 +526,20 @@ public:
           objectinfo.actuallines = actuallines;
           objectinfo.totallength = unitsize;
           //objectinfo.totallength = (intptr_t)nextobject - (intptr_t)objectStart;
-          objectinfo.start = (unsigned long *)&object[1];
+          objectinfo.start = (unsigned long *)objectStart;
        
-           objectinfo.stop = (unsigned long *)nextobject;
-          objectinfo.wordchange_start = &wordchange[objectOffset/sizeof(unsigned long)];
-          objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)&wordchange[objectOffset/sizeof(unsigned long)] + objectinfo.totallength);
+          objectinfo.stop = (unsigned long *)nextobject;
+          objectinfo.wordchange_start = (wordchangeinfo *)((intptr_t)wordchange + objectOffset);
+          objectinfo.wordchange_stop = (wordchangeinfo *)((intptr_t)wordchange + objectOffset + unitsize);
          
           memcpy((void *)&objectinfo.callsite, (void *)(object->getCallsiteRef()), object->getCallsiteLength());
           
-          // Check the first object for share type.
+          // Now add this object into the global ObjectTable.
           objectinfo.access_threads = getAccessThreads((unsigned long *)&object, object->getSize(), (wordchangeinfo *)objectinfo.wordchange_start);
           ObjectTable::getInstance().insertObject(objectinfo);        
         }
-          pos = (int *)nextobject;
+          
+        pos = (int *)nextobject;
         continue;
       } 
       else {
@@ -542,7 +549,8 @@ public:
 
   }
 
-  int getCachelines(int start, int size) {
+  // Caculate how many cache lines are occupied by specified address and size.
+  int getCachelines(unsigned long start, size_t size) {
     return ((start & xdefines::CACHELINE_SIZE_MASK) + size + xdefines::CACHE_LINE_SIZE - 1)/xdefines::CACHE_LINE_SIZE;
   }
 
