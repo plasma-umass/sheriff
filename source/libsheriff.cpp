@@ -50,7 +50,6 @@ extern "C" {
   int cleanupSize = 0;
 #endif
   #define INITIAL_MALLOC_SIZE 81920
-  //static bool *initialized;
   static char * tempalloced = NULL;
   static int remainning = 0;
 
@@ -128,7 +127,8 @@ extern "C" {
     // We donot free any object if it is before 
     // initializaton has been finished to simplify
     // the logic of tempmalloc
-    if (!initialized) {
+    if(initialized) {
+     // printf("Now sheriff_free at %p 111\n", ptr);
       xrun::getInstance().free (ptr);
     }
   }
