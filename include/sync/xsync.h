@@ -204,7 +204,9 @@ private:
   void setSyncEntry(void * origentry, void * newentry) {
     void **dest = (void**)origentry;
 
-    *dest = newentry;
+    // FIXME, is it correct to do this???
+    // We will create a copy of this page in current thread.
+    //*dest = newentry;
 
     // Update the shared copy in the same time. 
     xmemory::getInstance().sharemem_write_word(origentry, (unsigned long)newentry);

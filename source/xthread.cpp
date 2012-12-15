@@ -21,7 +21,7 @@ void * xthread::spawn (xrun * runner,
   HL::sassert<(4096 > sizeof(ThreadStatus))> checkSize;
   ThreadStatus * t = new (buf) ThreadStatus;
 
-	//runner->atomicBegin(false, false);
+	runner->atomicBegin(false, false);
   return forkSpawn (runner, fn, t, arg);
 }
 
@@ -125,7 +125,7 @@ void * xthread::forkSpawn (xrun * runner,
     t->tid = child;
   
     // Start a new atomic section and return the thread info.
-    runner->atomicBegin(false, true);
+    runner->atomicBegin(true, false);
     return (void *) t;
       
   } else {
