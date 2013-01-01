@@ -142,7 +142,8 @@ extern "C" {
   }
 
   void * sheriff_memalign (size_t boundary, size_t size) {
-	  fprintf(stderr, "%d : sheriff don't support memalign. boundary %d size %d\n", getpid(), boundary, size);
+	  fprintf(stderr, "%u : Sheriff does not support memalign. boundary %d, size %u\n", 
+      getpid(), boundary, size);
     ::abort();
     return NULL;
   }

@@ -57,8 +57,8 @@ private:
 
   xrun()
   : _locksHeld (0),
-    _isInitialized (false),
     _memory (xmemory::getInstance()),
+    _isInitialized (false),
     _isProtected (false)
   {
   }
