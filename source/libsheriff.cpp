@@ -374,20 +374,25 @@ extern "C" {
     return 0;
   }
 
+  // Make sure that all pages are readable and writable by issuing writes on them 
   ssize_t read (int fd, void * buf, size_t count) {
-    int * start = (int *)buf;
-    long pages = (((intptr_t)buf & xdefines::PAGE_SIZE_MASK)+count)/xdefines::PageSize;
+    char * start = (char *)buf;
+    long pages = count/xdefines::PageSize;
 
+    if(pages >= 1) {
+     // fprintf(stderr, "fd %d buf %p count %d\n", fd, buf, count);
     // Trying to read on those pages, thus there won't be a segmenation fault in 
     // the system call.
-    for(long i = 0; i < pages; i++) {
-        start[i * 1024] = 0;
+      for(long i = 0; i < pages; i++) {
+        start[i * xdefines::PageSize] = '\0';
+      }
     }
-    start[count/sizeof(int)-1] = 0;
-
-    return WRAP(read)(fd, buf, count);
+    
+    // Make sure that last page are written so the page is readable and writable
+    start[count-1] = '\0';
   }
 
+#if 0
   ssize_t write (int fd, const void * buf, size_t count) {
     int * start = (int *)buf;
     long pages = (((intptr_t)buf & xdefines::PAGE_SIZE_MASK)+count)/xdefines::PageSize;
@@ -403,6 +408,7 @@ extern "C" {
     temp = start[count/sizeof(int)-1];
     return WRAP(write)(fd, buf, count);
   }
+#endif
 
   void *NOOOOOmmap(void *addr, size_t length, int prot, 
 		     int flags,  int fd, off_t offset) {
