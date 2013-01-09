@@ -100,7 +100,7 @@ namespace Kingsley {
   }
 
   inline size_t class2Size (const int i) {
-    return (size_t) (1 << (i+3));
+    return (size_t) (1UL << (i+3));
   }
 
   enum { NUMBINS = 29 };
