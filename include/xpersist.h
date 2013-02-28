@@ -425,6 +425,8 @@ public:
   
     // Compute the page number of this item
     int pageNo = computePage ((size_t) addr - (size_t) base());
+
+    printf("handlePAGEWRITE: addr %p pageNO %d\n", addr, pageNo);
  
     // Get an entry from page store.
     struct pageinfo * curPage = xpageentry::getInstance().alloc();
@@ -823,7 +825,7 @@ public:
       pageinfo = (struct pageinfo *)i->second;
       pageNo = pageinfo->pageNo;
  
-    //  fprintf(stderr, "COMMIT: %d on page %d on heap %d\n", getpid(), pageNo, _isHeap);
+      fprintf(stderr, "COMMIT: %d on page %d on heap %d\n", getpid(), pageNo, _isHeap);
  
       // If a page is shared and there are some wordChanges information,
       // We should commit the changes and update wordChanges information too.
@@ -847,7 +849,8 @@ public:
 
 private:
 
-  inline int computePage (int index) {
+  //inline int computePage (int index) {
+  inline int computePage (size_t index) {
     return (index * sizeof(Type)) / xdefines::PageSize;
   }
 
@@ -855,7 +858,7 @@ private:
   void updatePages (void * local, int size) {
     madvise (local, size, MADV_DONTNEED);
 
-    //fprintf(stderr, "%d: current copy at %p is discarded with size %d\n", getpid(), local, size);
+    fprintf(stderr, "%d: protect page %p size %d\n", getpid(), local, size);
     // Set this page to PROT_READ again.
     mprotect (local, size, PROT_READ);
   }
