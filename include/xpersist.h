@@ -426,7 +426,7 @@ public:
     // Compute the page number of this item
     int pageNo = computePage ((size_t) addr - (size_t) base());
 
-    printf("handlePAGEWRITE: addr %p pageNO %d\n", addr, pageNo);
+    //printf("handlePAGEWRITE: addr %p pageNO %d\n", addr, pageNo);
  
     // Get an entry from page store.
     struct pageinfo * curPage = xpageentry::getInstance().alloc();
@@ -663,17 +663,9 @@ public:
     }
     else if (tid != 0 && tid != mine && tid != 0xFFFF) {
       // This word is shared by different threads. Set to 0xFFFF.
-#ifndef X86_32BIT
-      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
-      fprintf(stderr, "wordAddr %lx (%lx): original tid %d now tid %d, version %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), tid, mine, word->version, changes);
-#endif
       word->tid = 0xFFFF;
     }
   
-#ifndef X86_32BIT
-      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
-      fprintf(stderr, "wordAddr %lx (%lx): original tid %d now tid %d, version %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), tid, mine, word->version, changes);
-#endif
     word->version += changes;
   }
 
@@ -726,18 +718,9 @@ public:
           recordedCacheNo = cacheNo;
         }
         
-#ifndef X86_32BIT
-      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
-      fprintf(stderr, "wordAddr %lx (%lx): tid %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), getpid(), localChanges[i]);
-#endif
-        
         recordWordChanges((void *)&globalChanges[i], localChanges[i] + 1);
       }
       else {
-#ifndef X86_32BIT
-      if(wordAddr == (unsigned long)0x2aacbee54610 || wordAddr == (unsigned long)0x2aacbee54620)
-      fprintf(stderr, "wordAddr %lx (%lx): tid %d changes %d\n", wordAddr, *((unsigned long *)wordAddr), getpid(), localChanges[i]);
-#endif
         recordWordChanges((void *)&globalChanges[i], localChanges[i]);
       }
 
@@ -825,7 +808,7 @@ public:
       pageinfo = (struct pageinfo *)i->second;
       pageNo = pageinfo->pageNo;
  
-      fprintf(stderr, "COMMIT: %d on page %d on heap %d\n", getpid(), pageNo, _isHeap);
+     // fprintf(stderr, "COMMIT: %d on page %d on heap %d\n", getpid(), pageNo, _isHeap);
  
       // If a page is shared and there are some wordChanges information,
       // We should commit the changes and update wordChanges information too.
@@ -858,7 +841,7 @@ private:
   void updatePages (void * local, int size) {
     madvise (local, size, MADV_DONTNEED);
 
-    fprintf(stderr, "%d: protect page %p size %d\n", getpid(), local, size);
+    //fprintf(stderr, "%d: protect page %p size %d\n", getpid(), local, size);
     // Set this page to PROT_READ again.
     mprotect (local, size, PROT_READ);
   }
