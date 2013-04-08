@@ -205,6 +205,7 @@ public:
       assert(textEnd >= textStart);
     }
 
+    fprintf(stderr, "textStart 0x%lx textEnd 0x%lx\n", textStart, textEnd);
     return; 
   }
 
@@ -559,7 +560,7 @@ public:
     Elf_Ehdr *hdr = elf->hdr;
     Elf_Sym *symbol;
 
-//  fprintf(stderr, "symbol table start %x and stop %x addr %x\n", elf->symtab_start, elf->symtab_stop, addr);
+ //   fprintf(stderr, "symbol table start %x and stop %x \n", elf->symtab_start, elf->symtab_stop);
     for (symbol = elf->symtab_start; symbol < elf->symtab_stop; symbol++) {
       if (symbol->st_shndx >= SHN_LORESERVE)
         continue;
@@ -576,11 +577,11 @@ public:
       long actuallines = 0;
       long interwrites = getCacheInvalidates(objectOffset/xdefines::CACHE_LINE_SIZE, lines, cacheInvalidates, &actuallines);
    
-      //fprintf(stderr, "memBase %p cacheInvalidates %p, start %lx size %d, Now lines %d global with interwrites %d\n", memBase, cacheInvalidates, objectStart, objectSize, lines, interwrites); 
       long totalwrites = getObjectWrites((int *)objectStart, (int *)(objectStart + objectSize), memBase, wordchange);
+//      fprintf(stderr, "memBase %p cacheInvalidates %p, start %lx size %d, Now lines %d global with interwrites %d totalWrites %d\n", memBase, cacheInvalidates, objectStart, objectSize, lines, interwrites, totalwrites); 
       // For globals, only when we need to output this object then we need to store that.
       // Since there is no accumulation for global objects.
-      if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT/2)) {
+      if (interwrites > xdefines::MIN_INTERWRITES_OUTPUT && totalwrites >= (xdefines::MIN_INTERWRITES_OUTPUT)) {
         // Save the object information
         ObjectInfo objectinfo;
         objectinfo.is_heap_object = false;

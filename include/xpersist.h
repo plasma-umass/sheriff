@@ -127,7 +127,7 @@ public:
     _isProtected = false;
   
 #ifndef NDEBUG
-    //fprintf (stderr, "transient = %p, persistent = %p, size = %lx\n", _transientMemory, _persistentMemory, NElts * sizeof(Type));
+    fprintf (stderr, "transient = %p, persistent = %p, size = %lx\n", _transientMemory, _persistentMemory, NElts * sizeof(Type));
 #endif
    // fprintf (stderr, "transient = %p, persistent = %p\n", _transientMemory, _persistentMemory);
 
@@ -187,7 +187,7 @@ public:
     int startCacheNo = offset/xdefines::CACHE_LINE_SIZE;
     int cacheLines = (end - begin)/xdefines::CACHE_LINE_SIZE;
     //if(cacheLines < 1)
-      cacheLines += 1;
+    cacheLines += 1;
 
     wordchangeinfo * wordStart = (wordchangeinfo *)((intptr_t)_wordChanges + offset);
 
@@ -221,10 +221,11 @@ public:
      // printScopeInformation(0x2aacbee54140, 0x2aacbee54340);
       //printScopeInformation(0x2aacbee538f8, 0x2aacbee54698);
 #endif
+      //printScopeInformation(0x941fd000, 0x941fd040);
      }
      else {
 #if !defined(X86_32BIT) 
-     // printScopeInformation(0x6014c0, 0x6014f0);
+    //  printScopeInformation(0x804aac0, 0x804ab00);
 #endif
      }
 
@@ -514,11 +515,12 @@ public:
           allocResourcesForSharedPage(pageinfo);
 
           // Create the temporary page by copying from the working version.
-          createTempPage = true;
+          // Create the temporary twin page from the local page.
+          memcpy(pageinfo->tempTwinPage, pageinfo->origTwinPage, xdefines::PageSize);
         }
 
         // We will try to record changes for those shared pages
-        recordChangesAndUpdate(pageinfo, createTempPage);
+        recordChangesAndUpdate(pageinfo);
       }
     }
   }
@@ -532,12 +534,12 @@ public:
     lastTid = atomic::exchange(&_cacheLastthread[cacheNo], myTid);
 
     //if(cacheNo == 4195014)
-    //  fprintf(stderr, "CacheNo %d at %lx: lastTid %d and myTid %d, interleavings %d\n", cacheNo, (intptr_t)base() + xdefines::CACHE_LINE_SIZE * cacheNo, lastTid, myTid, _cacheInvalidates[cacheNo]);
+    //fprintf(stderr, "%d: CacheNo %d at %lx: lastTid %d and myTid %d, interleavings %d\n", getpid(), cacheNo, (intptr_t)base() + xdefines::CACHE_LINE_SIZE * cacheNo, lastTid, myTid, _cacheInvalidates[cacheNo]);
     if(lastTid != 0 && lastTid != myTid) {
       // If the last thread to invalidate cache is not current thread, then we will update global
       // counter about invalidate numbers.
       atomic::increment(&_cacheInvalidates[cacheNo]);
-      //fprintf(stderr, "Record cache invalidates %p with interleavings %d cacheNo %d\n", &_cacheInvalidates[cacheNo], _cacheInvalidates[cacheNo], cacheNo);
+    //  fprintf(stderr, "Record cache invalidates %p with interleavings %d cacheNo %d\n", &_cacheInvalidates[cacheNo], _cacheInvalidates[cacheNo], cacheNo);
       interleaving = 1;
     }
     //fprintf(stderr, "%d :cacheinterleaves %d\n", getpid(), interleaving); 
@@ -546,18 +548,13 @@ public:
   
   // Record changes for those shared pages and update those temporary pages, 
   // This is done only in the periodic checking phase.
-  inline void recordChangesAndUpdate(struct pageinfo * pageinfo, bool createTempPage) {
+  inline void recordChangesAndUpdate(struct pageinfo * pageinfo) {
     int myTid = getpid();
     int * local = (int *)pageinfo->pageStart;
     //printf("%d: before record on pageNo %d createTempPage %d\n", getpid(), pageinfo->pageNo, createTempPage);
-    if(createTempPage) {
-      // Create the temporary twin page from the local page.
-      memcpy(pageinfo->tempTwinPage, pageinfo->origTwinPage, xdefines::PageSize);
-    }
       
     int * twin = (int *)pageinfo->tempTwinPage;
     
-    //printf("%d: record on pageNo %d createTempPage %d\n", getpid(), pageinfo->pageNo, createTempPage);
     int * wordChanges;
     int interWrites = 0;
     wordChanges = (int *)pageinfo->wordChanges;
@@ -571,11 +568,14 @@ public:
       if(local[i] != twin[i]) {
         int lastTid;
     
+     //   fprintf(stderr, "%d: difference at %p. Local %x twin %x\n", getpid(), &local[i], local[i], twin[i]);
         // Calculate the cache number for current words.  
         cacheNo = calcCacheNo(i);
         
         // We will update corresponding cache invalidates.
         if(cacheNo != recordedCacheNo) {
+          //printf("%d: now recordCacheInvalidates pageNo %d cacheNo %d. Address %p\n", getpid(), pageinfo->pageNo, cacheNo, &local[i]);
+//          fprintf(stderr, "%d: now recordCacheInvalidates pageNo %d cacheNo %d. Address %p\n", getpid(), pageinfo->pageNo, cacheNo, &local[i]);
           recordCacheInvalidates(pageinfo->pageNo, 
                        pageinfo->pageNo*xdefines::CACHES_PER_PAGE + cacheNo);
           recordedCacheNo = cacheNo;
@@ -639,14 +639,14 @@ public:
 
   inline void checkCommitWord(char * local, char * twin, char * share) {
     int i = 0;
-    //fprintf(stderr, "%d: local %lx twin %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)twin), *((unsigned long *)share));
+   // fprintf(stderr, "%d: local %lx twin %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)twin), *((unsigned long *)share));
     while(i < sizeof(unsigned long)) {
       if(local[i] != twin[i]) {
         share[i] = local[i];
       }
       i++;
     }
-  //  fprintf(stderr, "after commit %d: local %lx share %lx\n", getpid(), *((unsigned long *)local), *((unsigned long *)share));
+   // fprintf(stderr, "after commit %d (at %p): local %lx share %lx\n", getpid(), local, *((unsigned long *)local), *((unsigned long *)share));
   }
 
   inline void recordWordChanges(void * addr, int changes) {
@@ -717,10 +717,12 @@ public:
 
           recordedCacheNo = cacheNo;
         }
-        
+       
+    //    fprintf(stderr, "Check and commit changes at %p, with localChanges %d, now changed too\n", &local[i], localChanges[i]);
         recordWordChanges((void *)&globalChanges[i], localChanges[i] + 1);
       }
       else {
+     //   fprintf(stderr, "%d: Check and commit changes at %p, with localChanges %d\n", getpid(), &local[i], localChanges[i]);
         recordWordChanges((void *)&globalChanges[i], localChanges[i]);
       }
 
@@ -808,14 +810,14 @@ public:
       pageinfo = (struct pageinfo *)i->second;
       pageNo = pageinfo->pageNo;
  
-     // fprintf(stderr, "COMMIT: %d on page %d on heap %d\n", getpid(), pageNo, _isHeap);
+     // fprintf(stderr, "COMMIT: %d on page %d (at %p) on heap %d\n", getpid(), pageNo, pageinfo->pageStart, _isHeap);
  
       // If a page is shared and there are some wordChanges information,
       // We should commit the changes and update wordChanges information too.
       //if((pageinfo->shared == true) && (pageinfo->alloced == true)) { 
       if(pageinfo->alloced == true) { 
         checkcommitpage(pageinfo);
- //       fprintf(stderr, "%d COMMIT: finish on page %d\n", getpid(), pageNo);
+      //  fprintf(stderr, "%d COMMIT: finish on page %d********\n", getpid(), pageNo);
       }
       else {
         // Commit those changes by checking the original twin page.
@@ -841,7 +843,7 @@ private:
   void updatePages (void * local, int size) {
     madvise (local, size, MADV_DONTNEED);
 
-    //fprintf(stderr, "%d: protect page %p size %d\n", getpid(), local, size);
+  //  fprintf(stderr, "%d: protect page %p size %d\n", getpid(), local, size);
     // Set this page to PROT_READ again.
     mprotect (local, size, PROT_READ);
   }

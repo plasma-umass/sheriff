@@ -85,7 +85,7 @@ class xdefines {
 public:
   enum { STACK_SIZE = 1024 * 1024 };
 #ifdef X86_32BIT
-  enum { PROTECTEDHEAP_SIZE = 1048576UL * 600 };
+  enum { PROTECTEDHEAP_SIZE = 1048576UL * 800 };
 #else
   enum { PROTECTEDHEAP_SIZE = 1048576UL * 8192 };
 #endif
@@ -117,8 +117,8 @@ public:
   enum { CACHES_PER_PAGE = 64};
   enum { CACHELINE_SIZE_MASK = 0x3F};
   enum { MIN_PAGE_INTERWRITES_CARE = 20};
-  enum { MIN_INTERWRITES_OUTPUT = 1};
-  enum { MIN_INTERWRITES_CARE = 2};
+  enum { MIN_INTERWRITES_OUTPUT = 2};
+  enum { MIN_INTERWRITES_CARE = 10};
   enum { MIN_CONWRITES_CARE = 5};
   enum { MIN_INVALIDATES_CARE = MIN_INTERWRITES_CARE};
   enum { MIN_WRITES_CARE = 100000};
