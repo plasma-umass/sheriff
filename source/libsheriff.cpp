@@ -49,21 +49,9 @@ extern "C" {
   int allocTimes = 0;
   int cleanupSize = 0;
 #endif
-  #define INITIAL_MALLOC_SIZE 81920
-  static char * tempalloced = NULL;
-  static int remainning = 0;
+	#define InitialMallocSize 64 * 1024 * 1024
 
   void initializer (void) {
-    // Using globals to provide allocation
-    // before initialized.
-    // We can not use stack variable here since different process
-    // may use this to share information. 
-    static char tempbuf[INITIAL_MALLOC_SIZE];
-
-    // temprary allocation
-    tempalloced = (char *)tempbuf;
-    remainning = INITIAL_MALLOC_SIZE;
-
     init_real_functions();
 
   	global_thread_index = (unsigned long *)mmap(NULL, xdefines::PageSize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -74,7 +62,7 @@ extern "C" {
     
     // Start our first transaction.
 #ifndef NDEBUG
-    //    printf ("we're gonna begin now.\n"); fflush (stdout);
+     //fprintf (stderr, "we're gonna begin now.\n"); fflush (stdout);
 #endif
   }
 
@@ -86,28 +74,31 @@ extern "C" {
 
   // Temporary mallocation before initlization has been finished.
   static void * tempmalloc(int size) {
-    void * ptr = NULL;
-    if(remainning < size) {
-      // complaining. Tried to set to larger
-      printf("Not enough temporary buffer, size %d remainning %d\n", size, remainning);
-      exit(-1);
-    }
-    else {
-      ptr = (void *)tempalloced;
-      tempalloced += size;
-      remainning -= size;
-    }
-    return ptr;
-  }
+  	static char _buf[InitialMallocSize];
+  	static int _allocated = 0;
+
+		//	fprintf(stderr, "inside tempmalloc with size %d\n", size);
+  	if(_allocated + size > InitialMallocSize) {
+    	printf("Not enough space for tempmalloc");
+    	abort();
+  	} else {
+    	void* p = (void*)&_buf[_allocated];
+    	_allocated += size;
+    	return p;
+		}
+	}
 
   /// Functions related to memory management.
   void * sheriff_malloc (size_t sz) {
     void * ptr;
     if (!initialized) {
+			fprintf(stderr, "not initialized\n");
       ptr = tempmalloc(sz);
-    } else {
-      ptr = xrun::getInstance().malloc (sz);
     }
+    else {  
+			ptr = xrun::getInstance().malloc (sz);
+   	}
+
     if (ptr == NULL) {
       fprintf (stderr, "Out of memory!\n");
       ::abort();
