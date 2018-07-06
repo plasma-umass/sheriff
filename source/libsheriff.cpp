@@ -62,7 +62,7 @@ extern "C" {
     
     // Start our first transaction.
 #ifndef NDEBUG
-     //fprintf (stderr, "we're gonna begin now.\n"); fflush (stdout);
+     fprintf (stderr, "we're gonna begin now.\n"); fflush (stdout);
 #endif
   }
 
@@ -92,7 +92,6 @@ extern "C" {
   void * sheriff_malloc (size_t sz) {
     void * ptr;
     if (!initialized) {
-			fprintf(stderr, "not initialized\n");
       ptr = tempmalloc(sz);
     }
     else {  
